@@ -35,6 +35,78 @@ patch_static_paths() {
     for public_dir in $(printf '%s\n' $CANDIDATE_PUBLIC_DIRS | sort -u); do
         index_html="$public_dir/index.html"
         assets_dir="$public_dir/assets"
+                ingress_shim="$public_dir/ha-ingress-runtime.js"
+
+                cat > "$ingress_shim" <<'EOF'
+(function () {
+    var p = window.location.pathname || '/';
+    var m = p.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
+    var base = m ? m[1] : '';
+
+    if (!base) return;
+
+    function rewrite(url) {
+        if (typeof url !== 'string') return url;
+
+        if (/^https?:\/\//i.test(url)) {
+            try {
+                var parsed = new URL(url, window.location.origin);
+                if (parsed.origin !== window.location.origin) return url;
+                return rewrite(parsed.pathname + (parsed.search || '') + (parsed.hash || ''));
+            } catch (_) {
+                return url;
+            }
+        }
+
+        if (!url.startsWith('/') || url.startsWith('//')) return url;
+        if (url.startsWith(base)) return url;
+
+        var shouldRewrite =
+            url.startsWith('/api') ||
+            url.startsWith('/assets') ||
+            url.startsWith('/icons') ||
+            url === '/theme-boot.js' ||
+            url === '/registerSW.js' ||
+            url === '/manifest.webmanifest' ||
+            url === '/logo-light.svg' ||
+            url === '/logo-dark.svg' ||
+            url === '/login' ||
+            url.startsWith('/login?') ||
+            url === '/ws' ||
+            url.startsWith('/ws?');
+
+        if (!shouldRewrite) return url;
+        return base + url.replace(/^\//, '');
+    }
+
+    var _fetch = window.fetch;
+    if (typeof _fetch === 'function') {
+        window.fetch = function (input, init) {
+            if (typeof input === 'string') {
+                return _fetch.call(this, rewrite(input), init);
+            }
+            if (input && input.url && typeof Request === 'function') {
+                return _fetch.call(this, new Request(rewrite(input.url), input), init);
+            }
+            return _fetch.call(this, input, init);
+        };
+    }
+
+    if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+        var _open = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function (method, url) {
+            arguments[1] = rewrite(url);
+            return _open.apply(this, arguments);
+        };
+    }
+
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+            for (var i = 0; i < regs.length; i++) regs[i].unregister();
+        }).catch(function () {});
+    }
+})();
+EOF
 
         if [ -f "$index_html" ]; then
             echo "[run.sh] Patching index.html in $public_dir"
@@ -45,6 +117,10 @@ patch_static_paths() {
             sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "$index_html"
             sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "$index_html"
             sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "$index_html"
+
+            # Ensure runtime shim loads as early as possible (before app bundle).
+            sed -i 's#<script src="\./ha-ingress-runtime.js"></script>##g' "$index_html"
+            sed -i 's#<head>#<head>\n  <script src="./ha-ingress-runtime.js"></script>#' "$index_html"
         fi
 
         if [ -d "$assets_dir" ]; then
