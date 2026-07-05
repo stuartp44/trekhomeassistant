@@ -8,13 +8,6 @@ FRONTEND_PORT=3000
 INDEX_HTML=/app/server/public/index.html
 ASSETS_DIR=/app/server/public/assets
 
-write_nginx_config() {
-    cat > "${NGINX_CONF}" <<EOF
-map \$request_uri \$ha_ingress_prefix {
-    ~^/api/hassio_ingress/([^/]+)/ /api/hassio_ingress/\$1;
-    default "";
-}
-
 patch_static_paths() {
     if [ -f "${INDEX_HTML}" ]; then
         # Convert root-absolute frontend references to relative paths so
@@ -36,6 +29,13 @@ patch_static_paths() {
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/theme-boot.js"#"./theme-boot.js"#g' {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/registerSW.js"#"./registerSW.js"#g' {} \;
     fi
+}
+
+write_nginx_config() {
+    cat > "${NGINX_CONF}" <<EOF
+map \$request_uri \$ha_ingress_prefix {
+    ~^/api/hassio_ingress/([^/]+)/ /api/hassio_ingress/\$1;
+    default "";
 }
 
 map \$http_upgrade \$connection_upgrade {
