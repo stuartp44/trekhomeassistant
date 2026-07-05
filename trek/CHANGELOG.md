@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.2](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.1...trekhomeassistant-v3.13.2) (2026-07-05)
+
+
+### Bug Fixes
+
+* update script paths in index.html and nginx config for ingress runtime ([5d425f2](https://github.com/stuartp44/trekhomeassistant/commit/5d425f2f20ca783c210fa412befdcc803c794dcd))
+
 ## [3.13.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.0...trekhomeassistant-v3.13.1) (2026-07-05)
 
 
