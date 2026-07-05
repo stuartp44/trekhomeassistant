@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.3...trekhomeassistant-v3.13.4) (2026-07-05)
+
+
+### Bug Fixes
+
+* add self-login redirect handling in patch_static_paths function ([719c43f](https://github.com/stuartp44/trekhomeassistant/commit/719c43f7b551e2b346885a638cfb831064c3dc10))
+
 ## [3.13.3](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.2...trekhomeassistant-v3.13.3) (2026-07-05)
 
 
