@@ -317,7 +317,8 @@ EOF
             echo "[run.sh] Patching index.html in $public_dir"
             # Ensure runtime shim loads as early as possible (before app bundle).
             sed -i 's#<script src="\./ha-ingress-runtime.js"></script>##g' "$index_html"
-            sed -i 's#<head>#<head>\n  <script src="./ha-ingress-runtime.js"></script>#' "$index_html"
+            sed -i 's#<script src="/ha-ingress-runtime.js"></script>##g' "$index_html"
+            sed -i 's#<head>#<head>\n  <script src="/ha-ingress-runtime.js"></script>#' "$index_html"
         fi
 
         if [ -d "$assets_dir" ]; then
@@ -392,6 +393,7 @@ server {
         sub_filter '"/registerSW.js"' '"\$effective_ingress_prefix/registerSW.js"';
         sub_filter '"/theme-boot.js"' '"\$effective_ingress_prefix/theme-boot.js"';
         sub_filter '"/manifest.webmanifest"' '"\$effective_ingress_prefix/manifest.webmanifest"';
+        sub_filter '"/ha-ingress-runtime.js"' '"\$effective_ingress_prefix/ha-ingress-runtime.js"';
         sub_filter '"/logo-light.svg"' '"\$effective_ingress_prefix/logo-light.svg"';
         sub_filter '"/logo-dark.svg"' '"\$effective_ingress_prefix/logo-dark.svg"';
         sub_filter '"/icons/' '"\$effective_ingress_prefix/icons/';
@@ -425,6 +427,7 @@ server {
         sub_filter '"/registerSW.js"' '"\$effective_ingress_prefix/registerSW.js"';
         sub_filter '"/theme-boot.js"' '"\$effective_ingress_prefix/theme-boot.js"';
         sub_filter '"/manifest.webmanifest"' '"\$effective_ingress_prefix/manifest.webmanifest"';
+        sub_filter '"/ha-ingress-runtime.js"' '"\$effective_ingress_prefix/ha-ingress-runtime.js"';
         sub_filter '"/logo-light.svg"' '"\$effective_ingress_prefix/logo-light.svg"';
         sub_filter '"/logo-dark.svg"' '"\$effective_ingress_prefix/logo-dark.svg"';
         sub_filter '"/icons/' '"\$effective_ingress_prefix/icons/';
