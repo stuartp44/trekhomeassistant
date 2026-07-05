@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.7](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.6...trekhomeassistant-v3.13.7) (2026-07-05)
+
+
+### Bug Fixes
+
+* trigger release for direct mode packaging ([c2767a8](https://github.com/stuartp44/trekhomeassistant/commit/c2767a8dcbc98b01471c85dd469a5875a53a6a0d))
+
 ## [3.13.6](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.5...trekhomeassistant-v3.13.6) (2026-07-05)
 
 
