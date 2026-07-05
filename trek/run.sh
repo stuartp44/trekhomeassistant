@@ -56,13 +56,14 @@ apply_ingress_compat_patch() {
         if (!root || !root.querySelectorAll) return;
 
         var nodes = root.querySelectorAll(
-            'img[src],script[src],source[src],video[src],audio[src],link[href],a[href],use[href],image[href]'
+            'img[src],script[src],source[src],video[src],audio[src],link[href],a[href],use[href],image[href],form[action]'
         );
 
         for (var i = 0; i < nodes.length; i++) {
             var el = nodes[i];
             var src = el.getAttribute('src');
             var href = el.getAttribute('href');
+            var action = el.getAttribute('action');
 
             if (src && src.charAt(0) === '/' && !src.startsWith('//')) {
                 var fixedSrc = rewrite(src);
@@ -72,6 +73,11 @@ apply_ingress_compat_patch() {
             if (href && href.charAt(0) === '/' && !href.startsWith('//')) {
                 var fixedHref = rewrite(href);
                 if (fixedHref !== href) el.setAttribute('href', fixedHref);
+            }
+
+            if (action && action.charAt(0) === '/' && !action.startsWith('//')) {
+                var fixedAction = rewrite(action);
+                if (fixedAction !== action) el.setAttribute('action', fixedAction);
             }
         }
     }
@@ -92,6 +98,54 @@ apply_ingress_compat_patch() {
         window.XMLHttpRequest.prototype.open = function(method, url) {
             arguments[1] = rewrite(url);
             return _open.apply(this, arguments);
+        };
+    }
+
+    if (window.history && window.history.pushState && window.history.replaceState) {
+        var _pushState = window.history.pushState.bind(window.history);
+        var _replaceState = window.history.replaceState.bind(window.history);
+
+        window.history.pushState = function(state, title, url) {
+            if (typeof url === 'string') {
+                url = rewrite(url);
+            }
+            return _pushState(state, title, url);
+        };
+
+        window.history.replaceState = function(state, title, url) {
+            if (typeof url === 'string') {
+                url = rewrite(url);
+            }
+            return _replaceState(state, title, url);
+        };
+    }
+
+    if (window.location && window.location.assign && window.location.replace) {
+        var _assign = window.location.assign.bind(window.location);
+        var _replace = window.location.replace.bind(window.location);
+
+        window.location.assign = function(url) {
+            if (typeof url === 'string') {
+                url = rewrite(url);
+            }
+            return _assign(url);
+        };
+
+        window.location.replace = function(url) {
+            if (typeof url === 'string') {
+                url = rewrite(url);
+            }
+            return _replace(url);
+        };
+    }
+
+    if (window.open) {
+        var _openWindow = window.open.bind(window);
+        window.open = function(url, target, features) {
+            if (typeof url === 'string') {
+                url = rewrite(url);
+            }
+            return _openWindow(url, target, features);
         };
     }
 
@@ -132,6 +186,15 @@ apply_ingress_compat_patch() {
     }
 
     rewriteDomAssetUrls(document);
+
+    document.addEventListener('submit', function(ev) {
+        var form = ev && ev.target;
+        if (!form || !form.getAttribute || !form.setAttribute) return;
+        var action = form.getAttribute('action');
+        if (action && action.charAt(0) === '/' && !action.startsWith('//')) {
+            form.setAttribute('action', rewrite(action));
+        }
+    }, true);
 
     if (window.MutationObserver && document && document.documentElement) {
         var mo = new MutationObserver(function(mutations) {
