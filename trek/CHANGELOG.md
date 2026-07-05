@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.3](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.2...trekhomeassistant-v3.9.3) (2026-07-05)
+
+
+### Bug Fixes
+
+* enhance static path patching in run.sh for dynamic public directory detection ([a72a661](https://github.com/stuartp44/trekhomeassistant/commit/a72a6618b22b4eb04828204264fb0ea60f9d8cfc))
+
 ## [3.9.2](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.1...trekhomeassistant-v3.9.2) (2026-07-05)
 
 
