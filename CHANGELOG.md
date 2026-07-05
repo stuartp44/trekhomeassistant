@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.3](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.2...trekhomeassistant-v3.8.3) (2026-07-05)
+
+
+### Bug Fixes
+
+* improve service worker registration handling for Home Assistant ingress ([cf16c62](https://github.com/stuartp44/trekhomeassistant/commit/cf16c62e047af2a9e5cbb4407116c76b007ccf92))
+
 ## [3.8.2](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.1...trekhomeassistant-v3.8.2) (2026-07-05)
 
 
