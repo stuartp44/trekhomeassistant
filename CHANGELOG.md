@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.0...trekhomeassistant-v3.8.1) (2026-07-05)
+
+
+### Bug Fixes
+
+* update URL rewriting logic in ha-ingress-compat.js for improved asset loading ([f0a3b00](https://github.com/stuartp44/trekhomeassistant/commit/f0a3b00ef82875222b3f5fce099a6320514ea5e2))
+
 ## [3.8.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.7.0...trekhomeassistant-v3.8.0) (2026-07-05)
 
 
