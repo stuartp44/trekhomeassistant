@@ -4,6 +4,7 @@ set -e
 OPTIONS_FILE=/data/options.json
 
 INDEX_HTML=/app/server/public/index.html
+SHIM_JS=/app/server/public/ha-ingress-compat.js
 
 apply_ingress_compat_patch() {
         if [ ! -f "${INDEX_HTML}" ]; then
@@ -18,138 +19,127 @@ apply_ingress_compat_patch() {
         sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "${INDEX_HTML}"
         sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "${INDEX_HTML}"
 
-        if grep -q 'ha-ingress-compat-shim' "${INDEX_HTML}"; then
-                return
-        fi
+        cat > "${SHIM_JS}" <<'EOF'
+    (function () {
+        var p = window.location.pathname || '/';
+        var m = p.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
+        var base = m ? m[1] : '/';
 
-        cat > /tmp/ha-ingress-compat-shim.html <<'EOF'
-<script id="ha-ingress-compat-shim">
-(function () {
-    var p = window.location.pathname || '/';
-    var m = p.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
-    var base = m ? m[1] : '/';
-    function rewrite(url) {
-        if (typeof url !== 'string') return url;
+        function rewrite(url) {
+            if (typeof url !== 'string') return url;
 
-        // Rewrite same-origin absolute URLs (https://host/api/...) as well as
-        // root-relative URLs (/api/...) so axios/fetch/xhr all route through
-        // Home Assistant ingress.
-        if (/^https?:\/\//i.test(url)) {
-            try {
-                var parsed = new URL(url, window.location.origin);
-                if (parsed.origin !== window.location.origin) return url;
-                return rewrite(parsed.pathname + (parsed.search || '') + (parsed.hash || ''));
-            } catch (e) {
-                return url;
-            }
-        }
-
-        if (!url.startsWith('/') || url.startsWith('//')) return url;
-        if (base === '/') return url;
-        return base + url.replace(/^\//, '');
-    }
-
-    function rewriteDomAssetUrls(root) {
-        if (!root || !root.querySelectorAll) return;
-
-        var nodes = root.querySelectorAll(
-            'img[src],script[src],source[src],video[src],audio[src],link[href],a[href],use[href],image[href]'
-        );
-
-        for (var i = 0; i < nodes.length; i++) {
-            var el = nodes[i];
-            var src = el.getAttribute('src');
-            var href = el.getAttribute('href');
-
-            if (src && src.charAt(0) === '/' && !src.startsWith('//')) {
-                var fixedSrc = rewrite(src);
-                if (fixedSrc !== src) el.setAttribute('src', fixedSrc);
-            }
-
-            if (href && href.charAt(0) === '/' && !href.startsWith('//')) {
-                var fixedHref = rewrite(href);
-                if (fixedHref !== href) el.setAttribute('href', fixedHref);
-            }
-        }
-    }
-
-    var _fetch = window.fetch;
-    if (typeof _fetch === 'function') {
-        window.fetch = function(input, init) {
-            if (typeof input === 'string') return _fetch.call(this, rewrite(input), init);
-            if (input && input.url && typeof Request === 'function') {
-                return _fetch.call(this, new Request(rewrite(input.url), input), init);
-            }
-            return _fetch.call(this, input, init);
-        };
-    }
-
-    if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
-        var _open = window.XMLHttpRequest.prototype.open;
-        window.XMLHttpRequest.prototype.open = function(method, url) {
-            arguments[1] = rewrite(url);
-            return _open.apply(this, arguments);
-        };
-    }
-
-    if (window.WebSocket) {
-        var _WebSocket = window.WebSocket;
-        window.WebSocket = function(url, protocols) {
-            if (typeof url === 'string' && url.startsWith('/')) {
-                var scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                url = scheme + window.location.host + rewrite(url);
-            }
-            return new _WebSocket(url, protocols);
-        };
-        window.WebSocket.prototype = _WebSocket.prototype;
-    }
-
-    if (navigator.serviceWorker && navigator.serviceWorker.register) {
-        var _register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
-        navigator.serviceWorker.register = function(scriptURL, options) {
-            var fixed = rewrite(scriptURL);
-            return _register(fixed, options);
-        };
-    }
-
-    rewriteDomAssetUrls(document);
-
-    if (window.MutationObserver && document && document.documentElement) {
-        var mo = new MutationObserver(function(mutations) {
-            for (var i = 0; i < mutations.length; i++) {
-                var m = mutations[i];
-                if (m.type === 'attributes' && m.target && m.target.getAttribute) {
-                    rewriteDomAssetUrls(m.target.parentNode || document);
+            // Rewrite same-origin absolute URLs (https://host/api/...) as well as
+            // root-relative URLs (/api/...) so axios/fetch/xhr all route through
+            // Home Assistant ingress.
+            if (/^https?:\/\//i.test(url)) {
+                try {
+                    var parsed = new URL(url, window.location.origin);
+                    if (parsed.origin !== window.location.origin) return url;
+                    return rewrite(parsed.pathname + (parsed.search || '') + (parsed.hash || ''));
+                } catch (e) {
+                    return url;
                 }
-                if (m.addedNodes && m.addedNodes.length) {
-                    for (var j = 0; j < m.addedNodes.length; j++) {
-                        var n = m.addedNodes[j];
-                        if (n && n.nodeType === 1) rewriteDomAssetUrls(n);
+            }
+
+            if (!url.startsWith('/') || url.startsWith('//')) return url;
+            if (base === '/') return url;
+            return base + url.replace(/^\//, '');
+        }
+
+        function rewriteDomAssetUrls(root) {
+            if (!root || !root.querySelectorAll) return;
+
+            var nodes = root.querySelectorAll(
+                'img[src],script[src],source[src],video[src],audio[src],link[href],a[href],use[href],image[href]'
+            );
+
+            for (var i = 0; i < nodes.length; i++) {
+                var el = nodes[i];
+                var src = el.getAttribute('src');
+                var href = el.getAttribute('href');
+
+                if (src && src.charAt(0) === '/' && !src.startsWith('//')) {
+                    var fixedSrc = rewrite(src);
+                    if (fixedSrc !== src) el.setAttribute('src', fixedSrc);
+                }
+
+                if (href && href.charAt(0) === '/' && !href.startsWith('//')) {
+                    var fixedHref = rewrite(href);
+                    if (fixedHref !== href) el.setAttribute('href', fixedHref);
+                }
+            }
+        }
+
+        var _fetch = window.fetch;
+        if (typeof _fetch === 'function') {
+            window.fetch = function(input, init) {
+                if (typeof input === 'string') return _fetch.call(this, rewrite(input), init);
+                if (input && input.url && typeof Request === 'function') {
+                    return _fetch.call(this, new Request(rewrite(input.url), input), init);
+                }
+                return _fetch.call(this, input, init);
+            };
+        }
+
+        if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+            var _open = window.XMLHttpRequest.prototype.open;
+            window.XMLHttpRequest.prototype.open = function(method, url) {
+                arguments[1] = rewrite(url);
+                return _open.apply(this, arguments);
+            };
+        }
+
+        if (window.WebSocket) {
+            var _WebSocket = window.WebSocket;
+            window.WebSocket = function(url, protocols) {
+                if (typeof url === 'string' && url.startsWith('/')) {
+                    var scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                    url = scheme + window.location.host + rewrite(url);
+                }
+                return new _WebSocket(url, protocols);
+            };
+            window.WebSocket.prototype = _WebSocket.prototype;
+        }
+
+        if (navigator.serviceWorker && navigator.serviceWorker.register) {
+            var _register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
+            navigator.serviceWorker.register = function(scriptURL, options) {
+                var fixed = rewrite(scriptURL);
+                return _register(fixed, options);
+            };
+        }
+
+        rewriteDomAssetUrls(document);
+
+        if (window.MutationObserver && document && document.documentElement) {
+            var mo = new MutationObserver(function(mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var mm = mutations[i];
+                    if (mm.type === 'attributes' && mm.target && mm.target.getAttribute) {
+                        rewriteDomAssetUrls(mm.target.parentNode || document);
+                    }
+                    if (mm.addedNodes && mm.addedNodes.length) {
+                        for (var j = 0; j < mm.addedNodes.length; j++) {
+                            var n = mm.addedNodes[j];
+                            if (n && n.nodeType === 1) rewriteDomAssetUrls(n);
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        mo.observe(document.documentElement, {
-            subtree: true,
-            childList: true,
-            attributes: true,
-            attributeFilter: ['src', 'href']
-        });
-    }
-})();
-</script>
-EOF
+            mo.observe(document.documentElement, {
+                subtree: true,
+                childList: true,
+                attributes: true,
+                attributeFilter: ['src', 'href']
+            });
+        }
+    })();
+    EOF
 
-        awk 'BEGIN{inserted=0} {
-            print $0;
-            if (!inserted && $0 ~ /<head>/) {
-                while ((getline line < "/tmp/ha-ingress-compat-shim.html") > 0) print line;
-                inserted=1;
-            }
-        }' "${INDEX_HTML}" > /tmp/index.html.patched
-
-        mv /tmp/index.html.patched "${INDEX_HTML}"
+        if ! grep -q 'ha-ingress-compat.js' "${INDEX_HTML}"; then
+            sed -i 's#</head>#  <script src="./ha-ingress-compat.js"></script>\n</head>#' "${INDEX_HTML}"
+        fi
 }
 
 # ── Persistent storage ────────────────────────────────────────────────────
