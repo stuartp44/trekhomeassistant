@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.7.0...trekhomeassistant-v3.8.0) (2026-07-05)
+
+
+### Features
+
+* add ha-ingress-compat.js for improved URL rewriting in run.sh ([f5f1bb8](https://github.com/stuartp44/trekhomeassistant/commit/f5f1bb8f0037224b5f3d40f9388c64e71051729a))
+
 ## [3.7.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.6.1...trekhomeassistant-v3.7.0) (2026-07-05)
 
 
