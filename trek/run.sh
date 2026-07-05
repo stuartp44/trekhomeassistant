@@ -32,7 +32,7 @@ patch_static_paths() {
         return
     fi
 
-    for public_dir in $CANDIDATE_PUBLIC_DIRS; do
+    for public_dir in $(printf '%s\n' $CANDIDATE_PUBLIC_DIRS | sort -u); do
         index_html="$public_dir/index.html"
         assets_dir="$public_dir/assets"
 
@@ -53,10 +53,17 @@ patch_static_paths() {
             find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
             find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/logo-light.svg)#url(./logo-light.svg)#g' {} \;
             find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/logo-dark.svg)#url(./logo-dark.svg)#g' {} \;
+            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/icons/#url(./icons/#g' {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/api"#"./api"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/api'#'./api'#g" {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/assets/#"./assets/#g' {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/assets/#'./assets/#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/assets"#"./assets"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/assets'#'./assets'#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/icons/#"./icons/#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/icons/#'./icons/#g" {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/api/#"./api/#g' {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/api/#'./api/#g" {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/ws"#"./ws"#g' {} \;
@@ -128,6 +135,8 @@ server {
         sub_filter '"/manifest.webmanifest"' '"\$effective_ingress_prefix/manifest.webmanifest"';
         sub_filter '"/logo-light.svg"' '"\$effective_ingress_prefix/logo-light.svg"';
         sub_filter '"/logo-dark.svg"' '"\$effective_ingress_prefix/logo-dark.svg"';
+        sub_filter '"/icons/' '"\$effective_ingress_prefix/icons/';
+        sub_filter "'/icons/" "'\$effective_ingress_prefix/icons/";
     }
 
     location / {
@@ -159,6 +168,8 @@ server {
         sub_filter '"/manifest.webmanifest"' '"\$effective_ingress_prefix/manifest.webmanifest"';
         sub_filter '"/logo-light.svg"' '"\$effective_ingress_prefix/logo-light.svg"';
         sub_filter '"/logo-dark.svg"' '"\$effective_ingress_prefix/logo-dark.svg"';
+        sub_filter '"/icons/' '"\$effective_ingress_prefix/icons/';
+        sub_filter "'/icons/" "'\$effective_ingress_prefix/icons/";
     }
 }
 EOF
