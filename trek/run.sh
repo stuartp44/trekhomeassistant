@@ -30,9 +30,47 @@ apply_ingress_compat_patch() {
     var base = m ? m[1] : '/';
     function rewrite(url) {
         if (typeof url !== 'string') return url;
+
+        // Rewrite same-origin absolute URLs (https://host/api/...) as well as
+        // root-relative URLs (/api/...) so axios/fetch/xhr all route through
+        // Home Assistant ingress.
+        if (/^https?:\/\//i.test(url)) {
+            try {
+                var parsed = new URL(url, window.location.origin);
+                if (parsed.origin !== window.location.origin) return url;
+                return rewrite(parsed.pathname + (parsed.search || '') + (parsed.hash || ''));
+            } catch (e) {
+                return url;
+            }
+        }
+
         if (!url.startsWith('/') || url.startsWith('//')) return url;
         if (base === '/') return url;
         return base + url.replace(/^\//, '');
+    }
+
+    function rewriteDomAssetUrls(root) {
+        if (!root || !root.querySelectorAll) return;
+
+        var nodes = root.querySelectorAll(
+            'img[src],script[src],source[src],video[src],audio[src],link[href],a[href],use[href],image[href]'
+        );
+
+        for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            var src = el.getAttribute('src');
+            var href = el.getAttribute('href');
+
+            if (src && src.charAt(0) === '/' && !src.startsWith('//')) {
+                var fixedSrc = rewrite(src);
+                if (fixedSrc !== src) el.setAttribute('src', fixedSrc);
+            }
+
+            if (href && href.charAt(0) === '/' && !href.startsWith('//')) {
+                var fixedHref = rewrite(href);
+                if (fixedHref !== href) el.setAttribute('href', fixedHref);
+            }
+        }
     }
 
     var _fetch = window.fetch;
@@ -72,6 +110,32 @@ apply_ingress_compat_patch() {
             var fixed = rewrite(scriptURL);
             return _register(fixed, options);
         };
+    }
+
+    rewriteDomAssetUrls(document);
+
+    if (window.MutationObserver && document && document.documentElement) {
+        var mo = new MutationObserver(function(mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var m = mutations[i];
+                if (m.type === 'attributes' && m.target && m.target.getAttribute) {
+                    rewriteDomAssetUrls(m.target.parentNode || document);
+                }
+                if (m.addedNodes && m.addedNodes.length) {
+                    for (var j = 0; j < m.addedNodes.length; j++) {
+                        var n = m.addedNodes[j];
+                        if (n && n.nodeType === 1) rewriteDomAssetUrls(n);
+                    }
+                }
+            }
+        });
+
+        mo.observe(document.documentElement, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['src', 'href']
+        });
     }
 })();
 </script>
