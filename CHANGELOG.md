@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.6.0...trekhomeassistant-v3.6.1) (2026-07-05)
+
+
+### Bug Fixes
+
+* improve version parsing in validation workflow ([6b2f9ff](https://github.com/stuartp44/trekhomeassistant/commit/6b2f9ff6b8e1cbdf05d0a3ea87b421232b2b04d3))
+
 ## [3.6.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.5.0...trekhomeassistant-v3.6.0) (2026-07-05)
 
 
