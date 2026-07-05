@@ -5,12 +5,37 @@ OPTIONS_FILE=/data/options.json
 NGINX_CONF=/etc/nginx/conf.d/default.conf
 BACKEND_PORT=3001
 FRONTEND_PORT=3000
+INDEX_HTML=/app/server/public/index.html
+ASSETS_DIR=/app/server/public/assets
 
 write_nginx_config() {
     cat > "${NGINX_CONF}" <<EOF
 map \$request_uri \$ha_ingress_prefix {
     ~^/api/hassio_ingress/([^/]+)/ /api/hassio_ingress/\$1;
     default "";
+}
+
+patch_static_paths() {
+    if [ -f "${INDEX_HTML}" ]; then
+        # Convert root-absolute frontend references to relative paths so
+        # Home Assistant ingress does not send requests to HA core endpoints.
+        sed -i 's#src="/assets/#src="./assets/#g' "${INDEX_HTML}"
+        sed -i 's#href="/assets/#href="./assets/#g' "${INDEX_HTML}"
+        sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "${INDEX_HTML}"
+        sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "${INDEX_HTML}"
+        sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "${INDEX_HTML}"
+    fi
+
+    if [ -d "${ASSETS_DIR}" ]; then
+        # Patch built CSS/JS bundles that still contain root-absolute paths.
+        find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/assets/#"./assets/#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/assets/#'./assets/#g" {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/theme-boot.js"#"./theme-boot.js"#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/registerSW.js"#"./registerSW.js"#g' {} \;
+    fi
 }
 
 map \$http_upgrade \$connection_upgrade {
@@ -149,5 +174,6 @@ if [ -n "${OIDC_ISSUER}" ]; then
 fi
 
 write_nginx_config
+patch_static_paths
 start_backend
 exec nginx -g 'daemon off;'
