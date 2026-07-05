@@ -6,7 +6,14 @@
     ".": {
       "release-type": "simple",
       "package-name": "trekhomeassistant",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "trek/config.yaml",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }

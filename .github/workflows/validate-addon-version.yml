@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate pinned upstream version
+      - name: Validate add-on and pinned image versions
         run: |
           set -euo pipefail
 
@@ -35,12 +35,11 @@ jobs:
             exit 1
           fi
 
-          if [ "$config_version" != "$amd64_tag" ] || [ "$config_version" != "$aarch64_tag" ]; then
-            echo "Version mismatch detected."
-            echo "trek/config.yaml version: $config_version"
-            echo "trek/build.yaml amd64 tag: $amd64_tag"
-            echo "trek/build.yaml aarch64 tag: $aarch64_tag"
+          if [ "$amd64_tag" != "$aarch64_tag" ]; then
+            echo "Pinned image tag mismatch detected between architectures."
+            echo "amd64 tag: $amd64_tag"
+            echo "aarch64 tag: $aarch64_tag"
             exit 1
           fi
 
-          echo "Pinned version validation passed: $config_version"
+          echo "Validation passed. addon version=$config_version, pinned TREK tag=$amd64_tag"

@@ -44,6 +44,7 @@ This repository uses `release-please`.
 - Merge conventional commits into `main` (for example: `feat:`, `fix:`, `chore:`).
 - GitHub Actions opens/updates a release PR with changelog updates.
 - Merging that release PR creates the GitHub release and tag.
+- Release PRs also update the add-on version in `trek/config.yaml`.
 
 Non-conventional historic commits are bootstrapped from the release pipeline.
 From now on, keep commit messages conventional so releases are generated correctly.
@@ -57,7 +58,7 @@ The TREK add-on version is pinned to an explicit upstream TREK release (never
 ## Version Pinning And Auto-Bump
 
 - `trek/build.yaml` pins both architectures to `mauriceboe/trek:<version>`.
-- `trek/config.yaml` uses the same pinned version.
+- `trek/config.yaml` stores the add-on release version.
 - `test-addon-version` workflow tests that pinned versions are consistent.
 - Renovate watches upstream `mauriceboe/trek` tags and opens PRs when updates
   are available.
