@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.4.0...trekhomeassistant-v3.5.0) (2026-07-05)
+
+
+### Features
+
+* enhance TREK add-on with Home Assistant ingress support and fallback options ([407d7c0](https://github.com/stuartp44/trekhomeassistant/commit/407d7c052ba60c54e199102f748e7b1aaea38960))
+
 ## [3.4.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.3.0...trekhomeassistant-v3.4.0) (2026-07-05)
 
 
