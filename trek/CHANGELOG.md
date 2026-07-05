@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.14.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.7...trekhomeassistant-v3.14.0) (2026-07-05)
+
+
+### Features
+
+* add cookie_secure option for session cookie security in configuration ([f925298](https://github.com/stuartp44/trekhomeassistant/commit/f9252982869f95796adda1dd9eae5baf28d630bf))
+
 ## [3.13.7](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.6...trekhomeassistant-v3.13.7) (2026-07-05)
 
 
