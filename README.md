@@ -35,6 +35,9 @@ This repository uses `release-please`.
 - GitHub Actions opens/updates a release PR with changelog updates.
 - Merging that release PR creates the GitHub release and tag.
 
+Non-conventional historic commits are bootstrapped from the release pipeline.
+From now on, keep commit messages conventional so releases are generated correctly.
+
 The TREK add-on version is pinned to an explicit upstream TREK release (never
 `latest`) and is managed by Renovate.
 
