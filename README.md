@@ -37,6 +37,8 @@ This repository uses `release-please`.
 
 Non-conventional historic commits are bootstrapped from the release pipeline.
 From now on, keep commit messages conventional so releases are generated correctly.
+Examples: `chore: adjust release pipeline`, `fix: correct add-on validation`, `feat: add new add-on option`.
+GitHub Actions enforces this via the `commitlint` workflow on pull requests and pushes to `main`.
 
 The TREK add-on version is pinned to an explicit upstream TREK release (never
 `latest`) and is managed by Renovate.
