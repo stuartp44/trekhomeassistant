@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.5.0...trekhomeassistant-v3.6.0) (2026-07-05)
+
+
+### Features
+
+* update validation workflow and README for add-on version consistency ([e2eaa3c](https://github.com/stuartp44/trekhomeassistant/commit/e2eaa3cb501e2a43fb161f43762101379c85dc7a))
+
 ## [3.5.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.4.0...trekhomeassistant-v3.5.0) (2026-07-05)
 
 
