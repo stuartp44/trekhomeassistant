@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.0...trekhomeassistant-v3.13.1) (2026-07-05)
+
+
+### Bug Fixes
+
+* ensure trailing slash in extracted base path from ingress URLs ([2107f1b](https://github.com/stuartp44/trekhomeassistant/commit/2107f1b97ca5d0b19e4a55cca1f4fddfa78b426c))
+
 ## [3.13.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.12.0...trekhomeassistant-v3.13.0) (2026-07-05)
 
 
