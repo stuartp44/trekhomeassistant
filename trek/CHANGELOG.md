@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.3](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.2...trekhomeassistant-v3.13.3) (2026-07-05)
+
+
+### Bug Fixes
+
+* update URL handling in patch_static_paths and asset rewrites for HA ingress ([59f3288](https://github.com/stuartp44/trekhomeassistant/commit/59f3288bdeae511319cca020de6f2900e93e4b55))
+
 ## [3.13.2](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.1...trekhomeassistant-v3.13.2) (2026-07-05)
 
 
