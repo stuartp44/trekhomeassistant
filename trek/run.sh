@@ -19,6 +19,12 @@ apply_ingress_compat_patch() {
     sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "${INDEX_HTML}"
     sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "${INDEX_HTML}"
 
+    # Vite builds can emit absolute font/image URLs in CSS (url(/assets/...)).
+    # Rewrite these to relative URLs for Home Assistant ingress subpaths.
+    if [ -d /app/server/public/assets ]; then
+        find /app/server/public/assets -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
+    fi
+
     cat > "${SHIM_JS}" <<'EOF'
 (function () {
     var p = window.location.pathname || '/';
@@ -105,7 +111,19 @@ apply_ingress_compat_patch() {
         var _register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
         navigator.serviceWorker.register = function(scriptURL, options) {
             var fixed = rewrite(scriptURL);
-            return _register(fixed, options);
+            var nextOptions = options;
+
+            // Prevent scope errors under HA ingress where '/' is outside allowed scope.
+            if (base !== '/') {
+                nextOptions = options ? Object.assign({}, options) : {};
+                if (!nextOptions.scope || nextOptions.scope === '/') {
+                    nextOptions.scope = base;
+                } else if (nextOptions.scope.charAt(0) === '/' && !nextOptions.scope.startsWith(base)) {
+                    nextOptions.scope = rewrite(nextOptions.scope);
+                }
+            }
+
+            return _register(fixed, nextOptions);
         };
     }
 
