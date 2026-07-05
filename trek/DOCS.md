@@ -69,6 +69,9 @@ Home Assistant backup system to protect your data.
 Update the add-on via **Supervisor → TREK → Update**. Your data is preserved
 in the persistent storage volume.
 
+Release notes are available in [CHANGELOG.md](CHANGELOG.md) and on
+[GitHub Releases](https://github.com/stuartp44/trekhomeassistant/releases).
+
 ## Accessing TREK
 
 - **Via HA sidebar** — click Open Web UI (uses Home Assistant ingress).

@@ -48,6 +48,8 @@ This repository uses `release-please`.
 - GitHub Actions opens/updates a release PR with changelog updates.
 - Merging that release PR creates the GitHub release and tag.
 - Release PRs also update the add-on version in `trek/config.yaml`.
+- Human-readable release notes are published in [trek/CHANGELOG.md](trek/CHANGELOG.md).
+- GitHub release pages are available at [Releases](https://github.com/stuartp44/trekhomeassistant/releases).
 
 Non-conventional historic commits are bootstrapped from the release pipeline.
 From now on, keep commit messages conventional so releases are generated correctly.
