@@ -1,0 +1,45 @@
+configuration:
+  encryption_key:
+    name: Encryption Key
+    description: >-
+      At-rest encryption key for stored secrets (API keys, MFA, SMTP, OIDC).
+      Generate with: openssl rand -hex 32.
+      Auto-generated on first boot if left empty — set it explicitly so you can rotate it later.
+  admin_email:
+    name: Admin Email
+    description: Email for the initial admin account (only used on first boot).
+  admin_password:
+    name: Admin Password
+    description: >-
+      Password for the initial admin account. A random password is printed to
+      the add-on log if left empty.
+  log_level:
+    name: Log Level
+    description: "'info' logs user actions; 'debug' adds verbose server details."
+  tz:
+    name: Timezone
+    description: "Timezone for logs and scheduled jobs, e.g. Europe/Berlin or America/New_York."
+  app_url:
+    name: App URL
+    description: >-
+      Public base URL of this instance, e.g. https://trek.example.com.
+      Required when OIDC is enabled and for email notification links.
+  allowed_origins:
+    name: Allowed Origins
+    description: >-
+      Comma-separated list of allowed CORS origins. Leave empty to use
+      same-origin policy (recommended).
+  oidc_issuer:
+    name: OIDC Issuer URL
+    description: >-
+      OpenID Connect provider discovery URL, e.g. https://auth.example.com.
+      Leave empty to disable SSO.
+  oidc_client_id:
+    name: OIDC Client ID
+    description: The client ID registered with your OIDC provider.
+  oidc_client_secret:
+    name: OIDC Client Secret
+    description: The client secret registered with your OIDC provider.
+  oidc_display_name:
+    name: OIDC Button Label
+    description: Label shown on the SSO login button, e.g. "Sign in with Authentik".

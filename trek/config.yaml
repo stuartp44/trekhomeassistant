@@ -1,0 +1,49 @@
+name: "TREK"
+version: "3.2.0"
+slug: "trek"
+description: "A self-hosted, real-time collaborative travel planner with maps, budgets, packing lists, a journal, and AI."
+url: "https://github.com/stuartp44/trekhomeassistant"
+arch:
+  - amd64
+  - aarch64
+homeassistant: "2024.1.0"
+startup: application
+boot: auto
+init: false
+timeout: 60
+ports:
+  3000/tcp: 3000
+ports_description:
+  3000/tcp: "TREK Web Interface"
+map:
+  - data
+ingress: true
+ingress_port: 3000
+ingress_stream: true
+panel_icon: mdi:map-marker-path
+panel_title: TREK
+watchdog: "http://[HOST]:[PORT:3000]/api/health"
+options:
+  encryption_key: ""
+  admin_email: "admin@trek.local"
+  admin_password: ""
+  log_level: "info"
+  tz: "UTC"
+  app_url: ""
+  allowed_origins: ""
+  oidc_issuer: ""
+  oidc_client_id: ""
+  oidc_client_secret: ""
+  oidc_display_name: "SSO"
+schema:
+  encryption_key: str?
+  admin_email: str
+  admin_password: str?
+  log_level: list(info|debug|warn|error)
+  tz: str
+  app_url: str?
+  allowed_origins: str?
+  oidc_issuer: str?
+  oidc_client_id: str?
+  oidc_client_secret: str?
+  oidc_display_name: str?

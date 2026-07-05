@@ -1,0 +1,46 @@
+name: test-addon-version
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate pinned upstream version
+        run: |
+          set -euo pipefail
+
+          config_version=$(grep -E '^version: "[0-9]+\.[0-9]+\.[0-9]+"$' trek/config.yaml | sed -E 's/^version: "([^"]+)"$/\1/')
+          amd64_tag=$(grep -E '^  amd64: "mauriceboe/trek:' trek/build.yaml | sed -E 's#^  amd64: "mauriceboe/trek:([^"]+)"$#\1#')
+          aarch64_tag=$(grep -E '^  aarch64: "mauriceboe/trek:' trek/build.yaml | sed -E 's#^  aarch64: "mauriceboe/trek:([^"]+)"$#\1#')
+
+          if [ -z "$config_version" ] || [ -z "$amd64_tag" ] || [ -z "$aarch64_tag" ]; then
+            echo "Version parsing failed. Check trek/config.yaml and trek/build.yaml formats."
+            exit 1
+          fi
+
+          if [ "$amd64_tag" = "latest" ] || [ "$aarch64_tag" = "latest" ]; then
+            echo "Image tags must be pinned to a specific TREK release, not 'latest'."
+            exit 1
+          fi
+
+          if [ "$config_version" != "$amd64_tag" ] || [ "$config_version" != "$aarch64_tag" ]; then
+            echo "Version mismatch detected."
+            echo "trek/config.yaml version: $config_version"
+            echo "trek/build.yaml amd64 tag: $amd64_tag"
+            echo "trek/build.yaml aarch64 tag: $aarch64_tag"
+            exit 1
+          fi
+
+          echo "Pinned version validation passed: $config_version"
