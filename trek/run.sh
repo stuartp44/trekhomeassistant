@@ -142,6 +142,11 @@ patch_static_paths() {
         patchSetter(window.HTMLLinkElement && window.HTMLLinkElement.prototype, 'href');
         patchSetter(window.HTMLAnchorElement && window.HTMLAnchorElement.prototype, 'href');
         patchSetter(window.HTMLFormElement && window.HTMLFormElement.prototype, 'action');
+
+        // Catch direct assignments like window.location.href = '/login?...'.
+        try {
+            patchSetter(Object.getPrototypeOf(window.location), 'href');
+        } catch (_) {}
     }
 
     var _fetch = window.fetch;
@@ -178,6 +183,24 @@ patch_static_paths() {
             if (typeof url === 'string') url = rewrite(url);
             return _replace(url);
         };
+
+        try {
+            var locProto = Object.getPrototypeOf(window.location);
+            var hrefDesc = locProto && Object.getOwnPropertyDescriptor(locProto, 'href');
+            if (hrefDesc && hrefDesc.get && hrefDesc.set) {
+                Object.defineProperty(locProto, 'href', {
+                    configurable: true,
+                    enumerable: hrefDesc.enumerable,
+                    get: function () {
+                        return hrefDesc.get.call(this);
+                    },
+                    set: function (url) {
+                        if (typeof url === 'string') url = rewrite(url);
+                        return hrefDesc.set.call(this, url);
+                    }
+                });
+            }
+        } catch (_) {}
     }
 
     if (window.history && window.history.pushState && window.history.replaceState) {
@@ -202,6 +225,30 @@ patch_static_paths() {
             return _openWindow(url, target, features);
         };
     }
+
+    document.addEventListener('click', function (ev) {
+        var node = ev && ev.target;
+        while (node && node !== document && !node.href) node = node.parentNode;
+        if (!node || !node.href) return;
+
+        var href = node.getAttribute && node.getAttribute('href');
+        if (!href || typeof href !== 'string') return;
+
+        var fixed = rewrite(href);
+        if (fixed !== href) {
+            ev.preventDefault();
+            window.location.assign(fixed);
+        }
+    }, true);
+
+    document.addEventListener('submit', function (ev) {
+        var form = ev && ev.target;
+        if (!form || !form.getAttribute || !form.setAttribute) return;
+        var action = form.getAttribute('action');
+        if (!action || typeof action !== 'string') return;
+        var fixed = rewrite(action);
+        if (fixed !== action) form.setAttribute('action', fixed);
+    }, true);
 
     patchDomWriters();
 
@@ -268,44 +315,13 @@ EOF
 
         if [ -f "$index_html" ]; then
             echo "[run.sh] Patching index.html in $public_dir"
-            # Convert root-absolute frontend references to relative paths so
-            # Home Assistant ingress does not send requests to HA core endpoints.
-            sed -i 's#src="/assets/#src="./assets/#g' "$index_html"
-            sed -i 's#href="/assets/#href="./assets/#g' "$index_html"
-            sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "$index_html"
-            sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "$index_html"
-            sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "$index_html"
-
             # Ensure runtime shim loads as early as possible (before app bundle).
             sed -i 's#<script src="\./ha-ingress-runtime.js"></script>##g' "$index_html"
             sed -i 's#<head>#<head>\n  <script src="./ha-ingress-runtime.js"></script>#' "$index_html"
         fi
 
         if [ -d "$assets_dir" ]; then
-            echo "[run.sh] Patching bundled assets in $assets_dir"
-            # Patch built CSS/JS bundles that still contain root-absolute paths.
-            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
-            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/logo-light.svg)#url(./logo-light.svg)#g' {} \;
-            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/logo-dark.svg)#url(./logo-dark.svg)#g' {} \;
-            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/icons/#url(./icons/#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/api"#"./api"#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/api'#'./api'#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/assets/#"./assets/#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/assets/#'./assets/#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/assets"#"./assets"#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/assets'#'./assets'#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/icons/#"./icons/#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/icons/#'./icons/#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/api/#"./api/#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/api/#'./api/#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/ws"#"./ws"#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/ws'#'./ws'#g" {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-light.svg"#"./logo-light.svg"#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-dark.svg"#"./logo-dark.svg"#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/theme-boot.js"#"./theme-boot.js"#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/registerSW.js"#"./registerSW.js"#g' {} \;
+            echo "[run.sh] Leaving bundled assets unchanged in $assets_dir (runtime/nginx rewrites active)"
         fi
     done
 }
