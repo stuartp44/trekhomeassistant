@@ -76,6 +76,11 @@ map \$request_uri \$ha_ingress_prefix {
     default "";
 }
 
+map \$http_x_ingress_path \$effective_ingress_prefix {
+    default \$http_x_ingress_path;
+    "" \$ha_ingress_prefix;
+}
+
 map \$http_upgrade \$connection_upgrade {
     default upgrade;
     '' close;
@@ -100,11 +105,11 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Forwarded-Prefix \$ha_ingress_prefix;
+        proxy_set_header X-Forwarded-Prefix \$effective_ingress_prefix;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
         proxy_read_timeout 86400;
-        proxy_redirect ~^(/.*)$ \$ha_ingress_prefix\$1;
+        proxy_redirect ~^(/.*)$ \$effective_ingress_prefix\$1;
 
         # Disable compressed upstream responses so sub_filter can rewrite paths.
         proxy_set_header Accept-Encoding "";
@@ -112,15 +117,17 @@ server {
         sub_filter_types text/html text/css application/javascript application/json;
 
         # Keep browser requests under ingress prefix.
-        sub_filter '"/assets/' '"\$ha_ingress_prefix/assets/';
-        sub_filter "'/assets/" "'\$ha_ingress_prefix/assets/";
-        sub_filter '"/api/' '"\$ha_ingress_prefix/api/';
-        sub_filter "'/api/" "'\$ha_ingress_prefix/api/";
-        sub_filter '"/ws"' '"\$ha_ingress_prefix/ws"';
-        sub_filter '"/login' '"\$ha_ingress_prefix/login';
-        sub_filter '"/registerSW.js"' '"\$ha_ingress_prefix/registerSW.js"';
-        sub_filter '"/theme-boot.js"' '"\$ha_ingress_prefix/theme-boot.js"';
-        sub_filter '"/manifest.webmanifest"' '"\$ha_ingress_prefix/manifest.webmanifest"';
+        sub_filter '"/assets/' '"\$effective_ingress_prefix/assets/';
+        sub_filter "'/assets/" "'\$effective_ingress_prefix/assets/";
+        sub_filter '"/api/' '"\$effective_ingress_prefix/api/';
+        sub_filter "'/api/" "'\$effective_ingress_prefix/api/";
+        sub_filter '"/ws"' '"\$effective_ingress_prefix/ws"';
+        sub_filter '"/login' '"\$effective_ingress_prefix/login';
+        sub_filter '"/registerSW.js"' '"\$effective_ingress_prefix/registerSW.js"';
+        sub_filter '"/theme-boot.js"' '"\$effective_ingress_prefix/theme-boot.js"';
+        sub_filter '"/manifest.webmanifest"' '"\$effective_ingress_prefix/manifest.webmanifest"';
+        sub_filter '"/logo-light.svg"' '"\$effective_ingress_prefix/logo-light.svg"';
+        sub_filter '"/logo-dark.svg"' '"\$effective_ingress_prefix/logo-dark.svg"';
     }
 
     location / {
@@ -130,9 +137,28 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Prefix \$effective_ingress_prefix;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
         proxy_read_timeout 86400;
+        proxy_redirect ~^(/.*)$ \$effective_ingress_prefix\$1;
+
+        # HA may strip ingress prefix before sending request to the add-on.
+        # Keep response payload URLs anchored to ingress prefix regardless.
+        proxy_set_header Accept-Encoding "";
+        sub_filter_once off;
+        sub_filter_types text/html text/css application/javascript application/json;
+        sub_filter '"/assets/' '"\$effective_ingress_prefix/assets/';
+        sub_filter "'/assets/" "'\$effective_ingress_prefix/assets/";
+        sub_filter '"/api/' '"\$effective_ingress_prefix/api/';
+        sub_filter "'/api/" "'\$effective_ingress_prefix/api/";
+        sub_filter '"/ws"' '"\$effective_ingress_prefix/ws"';
+        sub_filter '"/login' '"\$effective_ingress_prefix/login';
+        sub_filter '"/registerSW.js"' '"\$effective_ingress_prefix/registerSW.js"';
+        sub_filter '"/theme-boot.js"' '"\$effective_ingress_prefix/theme-boot.js"';
+        sub_filter '"/manifest.webmanifest"' '"\$effective_ingress_prefix/manifest.webmanifest"';
+        sub_filter '"/logo-light.svg"' '"\$effective_ingress_prefix/logo-light.svg"';
+        sub_filter '"/logo-dark.svg"' '"\$effective_ingress_prefix/logo-dark.svg"';
     }
 }
 EOF
