@@ -194,6 +194,27 @@ patch_static_paths() {
         var _assign = window.location.assign.bind(window.location);
         var _replace = window.location.replace.bind(window.location);
 
+        // Expose app-relative pathname (/login, /dashboard, ...) to frontend code.
+        // TREK checks exact public paths, and ingress-prefixed pathnames break that.
+        try {
+            var locProtoForPath = Object.getPrototypeOf(window.location);
+            var pathnameDesc = locProtoForPath && Object.getOwnPropertyDescriptor(locProtoForPath, 'pathname');
+            if (pathnameDesc && pathnameDesc.get && pathnameDesc.set) {
+                Object.defineProperty(locProtoForPath, 'pathname', {
+                    configurable: true,
+                    enumerable: pathnameDesc.enumerable,
+                    get: function () {
+                        var raw = pathnameDesc.get.call(this);
+                        return normalizeAppPath(raw);
+                    },
+                    set: function (value) {
+                        if (typeof value === 'string') value = rewrite(value);
+                        return pathnameDesc.set.call(this, value);
+                    }
+                });
+            }
+        } catch (_) {}
+
         window.location.assign = function (url) {
             if (typeof url === 'string' && isSelfLoginRedirect(url)) return;
             if (typeof url === 'string') url = rewrite(url);
