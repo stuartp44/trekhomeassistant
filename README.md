@@ -29,7 +29,8 @@ a travel journal, and a built-in MCP server for AI assistants.
    ```
 4. Find the **TREK** add-on in the store and click **Install**.
 
-The add-on opens via direct Web UI on port `3000` (HA Ingress is disabled).
+The add-on opens via Home Assistant Ingress (Open Web UI), with direct access
+on port `3000` available as fallback.
 
 ## Support
 

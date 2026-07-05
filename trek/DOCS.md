@@ -71,22 +71,62 @@ in the persistent storage volume.
 
 ## Accessing TREK
 
-- **Direct URL** — `http://<ha-host>:3000`.
+- **Via HA sidebar** — click Open Web UI (uses Home Assistant ingress).
+- **Direct URL fallback** — `http://<ha-host>:3000`.
 
-> **Important:** This add-on currently uses direct Web UI mode (not HA Ingress).
-> TREK serves frontend assets from root paths and does not currently run correctly
-> under Home Assistant's ingress subpath proxy.
+> **Important:** This add-on includes an ingress-compat shim for TREK frontend
+> asset and API paths so it works behind Home Assistant ingress.
 
 > **WebSocket note:** Real-time sync uses WebSockets on `/ws` and works over
-> direct connection.
+> ingress and direct connection.
 
 ## Reverse proxy (optional)
 
 If you want to expose TREK on a custom domain with TLS, place a reverse proxy
 in front of port `3000`. Set `app_url` to the public URL and ensure the proxy
-forwards WebSocket upgrades on `/ws`. See the
-[TREK README](https://github.com/mauriceboe/TREK#reverse-proxy) for Nginx and
-Caddy examples.
+forwards WebSocket upgrades on `/ws`.
+
+Nginx example (matching upstream TREK):
+
+```nginx
+server {
+	listen 80;
+	server_name trek.yourdomain.com;
+	return 301 https://$host$request_uri;
+}
+
+server {
+	listen 443 ssl http2;
+	server_name trek.yourdomain.com;
+
+	ssl_certificate     /etc/ssl/fullchain.pem;
+	ssl_certificate_key /etc/ssl/privkey.pem;
+
+	# 500 MB covers backup-restore uploads (capped at 500 MB server-side).
+	client_max_body_size 500m;
+
+	location / {
+		proxy_pass http://localhost:3000;
+		proxy_http_version 1.1;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+
+	location /ws {
+		proxy_pass http://localhost:3000;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+		proxy_set_header Host $host;
+		proxy_read_timeout 86400;
+	}
+}
+```
+
+See the [TREK README](https://github.com/mauriceboe/TREK#reverse-proxy) for
+additional proxy variants (for example Caddy).
 
 For a native-like Home Assistant experience with HTTPS:
 

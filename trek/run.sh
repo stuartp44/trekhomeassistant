@@ -3,6 +3,91 @@ set -e
 
 OPTIONS_FILE=/data/options.json
 
+INDEX_HTML=/app/server/public/index.html
+
+apply_ingress_compat_patch() {
+        if [ ! -f "${INDEX_HTML}" ]; then
+                return
+        fi
+
+        # Make root-absolute static references in index.html relative so they load
+        # correctly when Home Assistant serves the app under an ingress subpath.
+        sed -i 's#src="/assets/#src="./assets/#g' "${INDEX_HTML}"
+        sed -i 's#href="/assets/#href="./assets/#g' "${INDEX_HTML}"
+        sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "${INDEX_HTML}"
+        sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "${INDEX_HTML}"
+        sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "${INDEX_HTML}"
+
+        if grep -q 'ha-ingress-compat-shim' "${INDEX_HTML}"; then
+                return
+        fi
+
+        cat > /tmp/ha-ingress-compat-shim.html <<'EOF'
+<script id="ha-ingress-compat-shim">
+(function () {
+    var p = window.location.pathname || '/';
+    var m = p.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
+    var base = m ? m[1] : '/';
+    function rewrite(url) {
+        if (typeof url !== 'string') return url;
+        if (!url.startsWith('/') || url.startsWith('//')) return url;
+        if (base === '/') return url;
+        return base + url.replace(/^\//, '');
+    }
+
+    var _fetch = window.fetch;
+    if (typeof _fetch === 'function') {
+        window.fetch = function(input, init) {
+            if (typeof input === 'string') return _fetch.call(this, rewrite(input), init);
+            if (input && input.url && typeof Request === 'function') {
+                return _fetch.call(this, new Request(rewrite(input.url), input), init);
+            }
+            return _fetch.call(this, input, init);
+        };
+    }
+
+    if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+        var _open = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function(method, url) {
+            arguments[1] = rewrite(url);
+            return _open.apply(this, arguments);
+        };
+    }
+
+    if (window.WebSocket) {
+        var _WebSocket = window.WebSocket;
+        window.WebSocket = function(url, protocols) {
+            if (typeof url === 'string' && url.startsWith('/')) {
+                var scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                url = scheme + window.location.host + rewrite(url);
+            }
+            return new _WebSocket(url, protocols);
+        };
+        window.WebSocket.prototype = _WebSocket.prototype;
+    }
+
+    if (navigator.serviceWorker && navigator.serviceWorker.register) {
+        var _register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
+        navigator.serviceWorker.register = function(scriptURL, options) {
+            var fixed = rewrite(scriptURL);
+            return _register(fixed, options);
+        };
+    }
+})();
+</script>
+EOF
+
+        awk 'BEGIN{inserted=0} {
+            print $0;
+            if (!inserted && $0 ~ /<head>/) {
+                while ((getline line < "/tmp/ha-ingress-compat-shim.html") > 0) print line;
+                inserted=1;
+            }
+        }' "${INDEX_HTML}" > /tmp/index.html.patched
+
+        mv /tmp/index.html.patched "${INDEX_HTML}"
+}
+
 # ── Persistent storage ────────────────────────────────────────────────────
 # The Home Assistant Supervisor mounts the add-on's persistent storage at /data.
 # TREK expects its data at /app/data and uploads at /app/uploads.
@@ -74,5 +159,6 @@ fi
 # ── Start TREK ────────────────────────────────────────────────────────────
 # Must cd into /app/server so tsconfig-paths/register can resolve tsconfig.json
 # and ../node_modules. gosu drops privileges from root to the node user.
+apply_ingress_compat_patch
 cd /app/server
 exec gosu node node --require tsconfig-paths/register dist/index.js
