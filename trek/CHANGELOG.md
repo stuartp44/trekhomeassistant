@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.5](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.4...trekhomeassistant-v3.9.5) (2026-07-05)
+
+
+### Bug Fixes
+
+* update asset paths in NGINX configuration for icons and API ([db226bf](https://github.com/stuartp44/trekhomeassistant/commit/db226bf34638ebe579c3eb372bd5c6f10a7f760e))
+
 ## [3.9.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.3...trekhomeassistant-v3.9.4) (2026-07-05)
 
 
