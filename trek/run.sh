@@ -9,34 +9,64 @@ INDEX_HTML=/app/server/public/index.html
 ASSETS_DIR=/app/server/public/assets
 
 patch_static_paths() {
-    if [ -f "${INDEX_HTML}" ]; then
-        # Convert root-absolute frontend references to relative paths so
-        # Home Assistant ingress does not send requests to HA core endpoints.
-        sed -i 's#src="/assets/#src="./assets/#g' "${INDEX_HTML}"
-        sed -i 's#href="/assets/#href="./assets/#g' "${INDEX_HTML}"
-        sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "${INDEX_HTML}"
-        sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "${INDEX_HTML}"
-        sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "${INDEX_HTML}"
+    echo "[run.sh] Applying ingress static-path patch"
+
+    # TREK image layout can vary by version; patch any discovered public dir.
+    CANDIDATE_PUBLIC_DIRS=""
+
+    for d in /app/server/public /app/public /app/dist/public; do
+        if [ -d "$d" ]; then
+            CANDIDATE_PUBLIC_DIRS="$CANDIDATE_PUBLIC_DIRS $d"
+        fi
+    done
+
+    if [ -d /app ]; then
+        discovered=$(find /app -type f -name index.html 2>/dev/null | grep '/public/index.html$' | sed 's#/index.html$##' | sort -u || true)
+        if [ -n "$discovered" ]; then
+            CANDIDATE_PUBLIC_DIRS="$CANDIDATE_PUBLIC_DIRS $discovered"
+        fi
     fi
 
-    if [ -d "${ASSETS_DIR}" ]; then
-        # Patch built CSS/JS bundles that still contain root-absolute paths.
-        find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/logo-light.svg)#url(./logo-light.svg)#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/logo-dark.svg)#url(./logo-dark.svg)#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/assets/#"./assets/#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/assets/#'./assets/#g" {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/api/#"./api/#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/api/#'./api/#g" {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/ws"#"./ws"#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/ws'#'./ws'#g" {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/logo-light.svg"#"./logo-light.svg"#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/logo-dark.svg"#"./logo-dark.svg"#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/theme-boot.js"#"./theme-boot.js"#g' {} \;
-        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/registerSW.js"#"./registerSW.js"#g' {} \;
+    if [ -z "$CANDIDATE_PUBLIC_DIRS" ]; then
+        echo "[run.sh] No public directories found for static patch"
+        return
     fi
+
+    for public_dir in $CANDIDATE_PUBLIC_DIRS; do
+        index_html="$public_dir/index.html"
+        assets_dir="$public_dir/assets"
+
+        if [ -f "$index_html" ]; then
+            echo "[run.sh] Patching index.html in $public_dir"
+            # Convert root-absolute frontend references to relative paths so
+            # Home Assistant ingress does not send requests to HA core endpoints.
+            sed -i 's#src="/assets/#src="./assets/#g' "$index_html"
+            sed -i 's#href="/assets/#href="./assets/#g' "$index_html"
+            sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "$index_html"
+            sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "$index_html"
+            sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "$index_html"
+        fi
+
+        if [ -d "$assets_dir" ]; then
+            echo "[run.sh] Patching bundled assets in $assets_dir"
+            # Patch built CSS/JS bundles that still contain root-absolute paths.
+            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
+            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/logo-light.svg)#url(./logo-light.svg)#g' {} \;
+            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/logo-dark.svg)#url(./logo-dark.svg)#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/assets/#"./assets/#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/assets/#'./assets/#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/api/#"./api/#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/api/#'./api/#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/ws"#"./ws"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/ws'#'./ws'#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-light.svg"#"./logo-light.svg"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-dark.svg"#"./logo-dark.svg"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/theme-boot.js"#"./theme-boot.js"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/registerSW.js"#"./registerSW.js"#g' {} \;
+        fi
+    done
 }
 
 write_nginx_config() {
