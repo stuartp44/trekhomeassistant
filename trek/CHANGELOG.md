@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.2](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.1...trekhomeassistant-v3.9.2) (2026-07-05)
+
+
+### Bug Fixes
+
+* update asset paths in patch_static_paths function for improved resource loading ([8ca92a4](https://github.com/stuartp44/trekhomeassistant/commit/8ca92a4e5702874a210662dcb47a3574e0fb260f))
+
 ## [3.9.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.0...trekhomeassistant-v3.9.1) (2026-07-05)
 
 
