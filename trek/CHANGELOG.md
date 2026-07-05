@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.12.0...trekhomeassistant-v3.13.0) (2026-07-05)
+
+
+### Features
+
+* apply targeted rewrites for bundled assets in run.sh ([39416d8](https://github.com/stuartp44/trekhomeassistant/commit/39416d8e49c5b44b01a5ff18652f416a1442c3ba))
+
 ## [3.12.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.11.0...trekhomeassistant-v3.12.0) (2026-07-05)
 
 
