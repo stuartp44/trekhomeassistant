@@ -41,10 +41,10 @@ patch_static_paths() {
 (function () {
     function extractBase(pathname) {
         if (!pathname || typeof pathname !== 'string') return '';
-        var m = pathname.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
-        if (m) return m[1];
-        m = pathname.match(/^(\/hassio_ingress\/[^/]+\/)/);
-        if (m) return m[1];
+        var m = pathname.match(/^(\/api\/hassio_ingress\/[^/]+)(?:\/|$)/);
+        if (m) return m[1] + '/';
+        m = pathname.match(/^(\/hassio_ingress\/[^/]+)(?:\/|$)/);
+        if (m) return m[1] + '/';
         return '';
     }
 
