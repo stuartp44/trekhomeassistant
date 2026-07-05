@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.7.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.6.1...trekhomeassistant-v3.7.0) (2026-07-05)
+
+
+### Features
+
+* add icon and logo images; enhance URL rewriting in run.sh ([1ecfbe4](https://github.com/stuartp44/trekhomeassistant/commit/1ecfbe41aede09c1fd85b6af1315858e181aa726))
+
 ## [3.6.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.6.0...trekhomeassistant-v3.6.1) (2026-07-05)
 
 
