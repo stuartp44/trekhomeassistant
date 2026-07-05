@@ -92,6 +92,39 @@ patch_static_paths() {
         return base + url.replace(/^\//, '');
     }
 
+    function normalizeAppPath(path) {
+        if (!path || typeof path !== 'string') return '/';
+        if (!path.startsWith('/')) path = '/' + path;
+        if (base && path.startsWith(base)) {
+            var stripped = '/' + path.slice(base.length);
+            return stripped === '//' ? '/' : stripped;
+        }
+        return path;
+    }
+
+    function isSelfLoginRedirect(url) {
+        if (typeof url !== 'string') return false;
+        var candidate = rewrite(url);
+
+        try {
+            var parsed = new URL(candidate, window.location.origin);
+            var loginPath = normalizeAppPath(parsed.pathname || '/');
+            if (loginPath !== '/login') return false;
+
+            var redirect = parsed.searchParams.get('redirect');
+            if (!redirect) return false;
+
+            var current = normalizeAppPath(window.location.pathname || '/') + (window.location.search || '') + (window.location.hash || '');
+            var decoded = redirect;
+            try { decoded = decodeURIComponent(redirect); } catch (_) {}
+            var target = normalizeAppPath(decoded);
+
+            return target === current || target === normalizeAppPath(window.location.pathname || '/');
+        } catch (_) {
+            return false;
+        }
+    }
+
     function patchSetter(proto, prop) {
         if (!proto) return;
         var desc = Object.getOwnPropertyDescriptor(proto, prop);
@@ -162,11 +195,13 @@ patch_static_paths() {
         var _replace = window.location.replace.bind(window.location);
 
         window.location.assign = function (url) {
+            if (typeof url === 'string' && isSelfLoginRedirect(url)) return;
             if (typeof url === 'string') url = rewrite(url);
             return _assign(url);
         };
 
         window.location.replace = function (url) {
+            if (typeof url === 'string' && isSelfLoginRedirect(url)) return;
             if (typeof url === 'string') url = rewrite(url);
             return _replace(url);
         };
@@ -182,6 +217,7 @@ patch_static_paths() {
                         return hrefDesc.get.call(this);
                     },
                     set: function (url) {
+                        if (typeof url === 'string' && isSelfLoginRedirect(url)) return;
                         if (typeof url === 'string') url = rewrite(url);
                         return hrefDesc.set.call(this, url);
                     }
