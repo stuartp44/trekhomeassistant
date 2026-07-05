@@ -87,21 +87,8 @@ patch_static_paths() {
         if (!url.startsWith('/') || url.startsWith('//')) return url;
         if (url.startsWith(base)) return url;
 
-        var shouldRewrite =
-            url.startsWith('/api') ||
-            url.startsWith('/assets') ||
-            url.startsWith('/icons') ||
-            url === '/theme-boot.js' ||
-            url === '/registerSW.js' ||
-            url === '/manifest.webmanifest' ||
-            url === '/logo-light.svg' ||
-            url === '/logo-dark.svg' ||
-            url === '/login' ||
-            url.startsWith('/login?') ||
-            url === '/ws' ||
-            url.startsWith('/ws?');
-
-        if (!shouldRewrite) return url;
+        // Under HA ingress, any same-origin absolute-root path should stay scoped
+        // to the ingress prefix instead of escaping to HA core root.
         return base + url.replace(/^\//, '');
     }
 
@@ -328,8 +315,8 @@ EOF
             find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./#g' {} \;
 
             # Login and logo literals appear in bundled JS as root-absolute paths.
-            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
-            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
+            # Rewrite quoted /login* literals (single, double, backtick, escaped) to relative paths.
+            find "$assets_dir" -type f -name '*.js' -exec perl -0777 -pi -e 's{(["\x27`])/login}{$1./login}g; s{(["\x27])\\/login}{$1.\\/login}g' {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-light.svg"#"./logo-light.svg"#g' {} \;
             find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-dark.svg"#"./logo-dark.svg"#g' {} \;
         fi
