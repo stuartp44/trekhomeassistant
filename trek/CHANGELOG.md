@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.12.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.11.0...trekhomeassistant-v3.12.0) (2026-07-05)
+
+
+### Features
+
+* enhance URL handling in patch_static_paths for improved navigation ([c1aed97](https://github.com/stuartp44/trekhomeassistant/commit/c1aed9716325721350f93abbcc94c2b30e64fde2))
+
 ## [3.11.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.10.0...trekhomeassistant-v3.11.0) (2026-07-05)
 
 
