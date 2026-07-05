@@ -107,6 +107,10 @@ patch_static_paths() {
         var candidate = rewrite(url);
 
         try {
+            var currentPathOnly = normalizeAppPath(window.location.pathname || '/');
+            // Only guard against loops once we are already on the login page.
+            if (currentPathOnly !== '/login') return false;
+
             var parsed = new URL(candidate, window.location.origin);
             var loginPath = normalizeAppPath(parsed.pathname || '/');
             if (loginPath !== '/login') return false;
@@ -114,12 +118,12 @@ patch_static_paths() {
             var redirect = parsed.searchParams.get('redirect');
             if (!redirect) return false;
 
-            var current = normalizeAppPath(window.location.pathname || '/') + (window.location.search || '') + (window.location.hash || '');
+            var current = currentPathOnly + (window.location.search || '') + (window.location.hash || '');
             var decoded = redirect;
             try { decoded = decodeURIComponent(redirect); } catch (_) {}
             var target = normalizeAppPath(decoded);
 
-            return target === current || target === normalizeAppPath(window.location.pathname || '/');
+            return target === current || target === currentPathOnly;
         } catch (_) {
             return false;
         }
