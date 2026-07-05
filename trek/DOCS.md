@@ -44,6 +44,8 @@ random password is printed to the add-on log — check it with
 | `log_level` | Log verbosity: `info` (user actions) or `debug` (verbose). | `info` |
 | `tz` | Timezone for logs and cron jobs, e.g. `Europe/Berlin`. | `UTC` |
 | `app_url` | Public base URL of this instance, e.g. `https://trek.example.com`. Required when OIDC is enabled and for email notification links. | — |
+| `force_https` | Enable only behind a TLS-terminating reverse proxy. Enforces secure cookies and HTTPS redirects. | `false` |
+| `trust_proxy` | Number of trusted proxy hops in front of TREK (usually `1`). | `1` |
 | `allowed_origins` | Comma-separated CORS origins. Leave empty for same-origin. | — |
 | `oidc_issuer` | OpenID Connect provider URL (leave empty to disable SSO). | — |
 | `oidc_client_id` | OIDC client ID. | — |
@@ -69,12 +71,14 @@ in the persistent storage volume.
 
 ## Accessing TREK
 
-- **Via HA sidebar** — click the TREK panel entry (uses HA Ingress).
-- **Direct URL** — `http://<ha-host>:3000` (requires the port to be exposed in
-  Network settings).
+- **Direct URL** — `http://<ha-host>:3000`.
 
-> **WebSocket note:** Real-time sync uses WebSockets on `/ws`. Both the HA
-> Ingress proxy and a direct connection support WebSocket upgrades.
+> **Important:** This add-on currently uses direct Web UI mode (not HA Ingress).
+> TREK serves frontend assets from root paths and does not currently run correctly
+> under Home Assistant's ingress subpath proxy.
+
+> **WebSocket note:** Real-time sync uses WebSockets on `/ws` and works over
+> direct connection.
 
 ## Reverse proxy (optional)
 
@@ -83,6 +87,14 @@ in front of port `3000`. Set `app_url` to the public URL and ensure the proxy
 forwards WebSocket upgrades on `/ws`. See the
 [TREK README](https://github.com/mauriceboe/TREK#reverse-proxy) for Nginx and
 Caddy examples.
+
+For a native-like Home Assistant experience with HTTPS:
+
+1. Keep this add-on on direct Web UI mode.
+2. Put a local reverse proxy in front of TREK (`https://trek.<your-lan-domain>`).
+3. Set `app_url` to that HTTPS URL.
+4. Set `trust_proxy` to `1` (or your proxy hop count).
+5. Set `force_https` to `true` only when TLS termination is active.
 
 ## License
 

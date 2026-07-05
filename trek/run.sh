@@ -47,6 +47,12 @@ TZ=$(jq --raw-output '.tz // "UTC"' "${OPTIONS_FILE}")
 APP_URL=$(jq --raw-output '.app_url // ""' "${OPTIONS_FILE}")
 [ -n "${APP_URL}" ] && export APP_URL
 
+FORCE_HTTPS=$(jq --raw-output '.force_https // false' "${OPTIONS_FILE}")
+[ "${FORCE_HTTPS}" = "true" ] && export FORCE_HTTPS=true
+
+TRUST_PROXY=$(jq --raw-output '.trust_proxy // 1' "${OPTIONS_FILE}")
+[ -n "${TRUST_PROXY}" ] && export TRUST_PROXY
+
 ALLOWED_ORIGINS=$(jq --raw-output '.allowed_origins // ""' "${OPTIONS_FILE}")
 [ -n "${ALLOWED_ORIGINS}" ] && export ALLOWED_ORIGINS
 

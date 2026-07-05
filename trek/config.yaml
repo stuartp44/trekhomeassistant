@@ -17,9 +17,8 @@ ports_description:
   3000/tcp: "TREK Web Interface"
 map:
   - data
-ingress: true
-ingress_port: 3000
-ingress_stream: true
+ingress: false
+webui: "http://[HOST]:[PORT:3000]"
 panel_icon: mdi:map-marker-path
 panel_title: TREK
 watchdog: "http://[HOST]:[PORT:3000]/api/health"
@@ -30,6 +29,8 @@ options:
   log_level: "info"
   tz: "UTC"
   app_url: ""
+  force_https: false
+  trust_proxy: 1
   allowed_origins: ""
   oidc_issuer: ""
   oidc_client_id: ""
@@ -42,6 +43,8 @@ schema:
   log_level: list(info|debug|warn|error)
   tz: str
   app_url: str?
+  force_https: bool?
+  trust_proxy: int?
   allowed_origins: str?
   oidc_issuer: str?
   oidc_client_id: str?

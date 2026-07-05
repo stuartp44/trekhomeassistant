@@ -29,6 +29,8 @@ a travel journal, and a built-in MCP server for AI assistants.
    ```
 4. Find the **TREK** add-on in the store and click **Install**.
 
+The add-on opens via direct Web UI on port `3000` (HA Ingress is disabled).
+
 ## Support
 
 - TREK application issues → [mauriceboe/TREK](https://github.com/mauriceboe/TREK/issues)

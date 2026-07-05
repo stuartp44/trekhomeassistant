@@ -24,6 +24,16 @@ configuration:
     description: >-
       Public base URL of this instance, e.g. https://trek.example.com.
       Required when OIDC is enabled and for email notification links.
+  force_https:
+    name: Force HTTPS
+    description: >-
+      Enable only when TREK is behind a TLS-terminating reverse proxy.
+      Forces secure cookies, HSTS, and HTTP->HTTPS redirects.
+  trust_proxy:
+    name: Trust Proxy Hops
+    description: >-
+      Number of trusted reverse proxies in front of TREK (usually 1).
+      Needed so TREK correctly reads X-Forwarded-Proto and client IP.
   allowed_origins:
     name: Allowed Origins
     description: >-
