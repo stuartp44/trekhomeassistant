@@ -32,6 +32,9 @@ a travel journal, and a built-in MCP server for AI assistants.
 The add-on opens via Home Assistant Ingress (Open Web UI), with direct access
 on port `3000` available as fallback.
 
+Ingress support is provided by an internal nginx reverse proxy in front of the
+TREK app process to correctly handle ingress subpaths and redirects.
+
 ## Support
 
 - TREK application issues → [mauriceboe/TREK](https://github.com/mauriceboe/TREK/issues)

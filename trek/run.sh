@@ -2,238 +2,94 @@
 set -e
 
 OPTIONS_FILE=/data/options.json
+NGINX_CONF=/etc/nginx/conf.d/default.conf
+BACKEND_PORT=3001
+FRONTEND_PORT=3000
 
-INDEX_HTML=/app/server/public/index.html
-SHIM_JS=/app/server/public/ha-ingress-compat.js
+write_nginx_config() {
+    cat > "${NGINX_CONF}" <<EOF
+map \$request_uri \$ha_ingress_prefix {
+    ~^/api/hassio_ingress/([^/]+)/ /api/hassio_ingress/\$1;
+    default "";
+}
 
-apply_ingress_compat_patch() {
-    if [ ! -f "${INDEX_HTML}" ]; then
-        return
-    fi
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    '' close;
+}
 
-    # Make root-absolute static references in index.html relative so they load
-    # correctly when Home Assistant serves the app under an ingress subpath.
-    sed -i 's#src="/assets/#src="./assets/#g' "${INDEX_HTML}"
-    sed -i 's#href="/assets/#href="./assets/#g' "${INDEX_HTML}"
-    sed -i 's#src="/theme-boot.js"#src="./theme-boot.js"#g' "${INDEX_HTML}"
-    sed -i 's#src="/registerSW.js"#src="./registerSW.js"#g' "${INDEX_HTML}"
-    sed -i 's#href="/manifest.webmanifest"#href="./manifest.webmanifest"#g' "${INDEX_HTML}"
+server {
+    listen ${FRONTEND_PORT};
+    server_name _;
 
-    # Vite builds can emit absolute font/image URLs in CSS (url(/assets/...)).
-    # Rewrite these to relative URLs for Home Assistant ingress subpaths.
-    if [ -d /app/server/public/assets ]; then
-        find /app/server/public/assets -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
-    fi
+    client_max_body_size 500m;
 
-    cat > "${SHIM_JS}" <<'EOF'
-(function () {
-    var p = window.location.pathname || '/';
-    var m = p.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
-    var base = m ? m[1] : '/';
+    # Avoid noisy browser policy warnings on local non-HTTPS origins.
+    proxy_hide_header Cross-Origin-Opener-Policy;
+    proxy_hide_header Origin-Agent-Cluster;
+    proxy_hide_header Cross-Origin-Embedder-Policy;
 
-    function rewrite(url) {
-        if (typeof url !== 'string') return url;
+    location ~ ^/api/hassio_ingress/[^/]+/(.*)$ {
+        rewrite ^/api/hassio_ingress/[^/]+/(.*)$ /\$1 break;
+        proxy_pass http://127.0.0.1:${BACKEND_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Prefix \$ha_ingress_prefix;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_read_timeout 86400;
+        proxy_redirect ~^(/.*)$ \$ha_ingress_prefix\$1;
 
-        // Rewrite same-origin absolute URLs (https://host/api/...) as well as
-        // root-relative URLs (/api/...) so axios/fetch/xhr all route through
-        // Home Assistant ingress.
-        if (/^https?:\/\//i.test(url)) {
-            try {
-                var parsed = new URL(url, window.location.origin);
-                if (parsed.origin !== window.location.origin) return url;
-                return rewrite(parsed.pathname + (parsed.search || '') + (parsed.hash || ''));
-            } catch (e) {
-                return url;
-            }
-        }
+        # Disable compressed upstream responses so sub_filter can rewrite paths.
+        proxy_set_header Accept-Encoding "";
+        sub_filter_once off;
+        sub_filter_types text/html text/css application/javascript application/json;
 
-        if (!url.startsWith('/') || url.startsWith('//')) return url;
-        if (base === '/') return url;
-        return base + url.replace(/^\//, '');
+        # Keep browser requests under ingress prefix.
+        sub_filter '"/assets/' '"\$ha_ingress_prefix/assets/';
+        sub_filter "'/assets/" "'\$ha_ingress_prefix/assets/";
+        sub_filter '"/api/' '"\$ha_ingress_prefix/api/';
+        sub_filter "'/api/" "'\$ha_ingress_prefix/api/";
+        sub_filter '"/ws"' '"\$ha_ingress_prefix/ws"';
+        sub_filter '"/login' '"\$ha_ingress_prefix/login';
+        sub_filter '"/registerSW.js"' '"\$ha_ingress_prefix/registerSW.js"';
+        sub_filter '"/theme-boot.js"' '"\$ha_ingress_prefix/theme-boot.js"';
+        sub_filter '"/manifest.webmanifest"' '"\$ha_ingress_prefix/manifest.webmanifest"';
     }
 
-    function rewriteDomAssetUrls(root) {
-        if (!root || !root.querySelectorAll) return;
-
-        var nodes = root.querySelectorAll(
-            'img[src],script[src],source[src],video[src],audio[src],link[href],a[href],use[href],image[href],form[action]'
-        );
-
-        for (var i = 0; i < nodes.length; i++) {
-            var el = nodes[i];
-            var src = el.getAttribute('src');
-            var href = el.getAttribute('href');
-            var action = el.getAttribute('action');
-
-            if (src && src.charAt(0) === '/' && !src.startsWith('//')) {
-                var fixedSrc = rewrite(src);
-                if (fixedSrc !== src) el.setAttribute('src', fixedSrc);
-            }
-
-            if (href && href.charAt(0) === '/' && !href.startsWith('//')) {
-                var fixedHref = rewrite(href);
-                if (fixedHref !== href) el.setAttribute('href', fixedHref);
-            }
-
-            if (action && action.charAt(0) === '/' && !action.startsWith('//')) {
-                var fixedAction = rewrite(action);
-                if (fixedAction !== action) el.setAttribute('action', fixedAction);
-            }
-        }
+    location / {
+        proxy_pass http://127.0.0.1:${BACKEND_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_read_timeout 86400;
     }
-
-    var _fetch = window.fetch;
-    if (typeof _fetch === 'function') {
-        window.fetch = function(input, init) {
-            if (typeof input === 'string') return _fetch.call(this, rewrite(input), init);
-            if (input && input.url && typeof Request === 'function') {
-                return _fetch.call(this, new Request(rewrite(input.url), input), init);
-            }
-            return _fetch.call(this, input, init);
-        };
-    }
-
-    if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
-        var _open = window.XMLHttpRequest.prototype.open;
-        window.XMLHttpRequest.prototype.open = function(method, url) {
-            arguments[1] = rewrite(url);
-            return _open.apply(this, arguments);
-        };
-    }
-
-    if (window.history && window.history.pushState && window.history.replaceState) {
-        var _pushState = window.history.pushState.bind(window.history);
-        var _replaceState = window.history.replaceState.bind(window.history);
-
-        window.history.pushState = function(state, title, url) {
-            if (typeof url === 'string') {
-                url = rewrite(url);
-            }
-            return _pushState(state, title, url);
-        };
-
-        window.history.replaceState = function(state, title, url) {
-            if (typeof url === 'string') {
-                url = rewrite(url);
-            }
-            return _replaceState(state, title, url);
-        };
-    }
-
-    if (window.location && window.location.assign && window.location.replace) {
-        var _assign = window.location.assign.bind(window.location);
-        var _replace = window.location.replace.bind(window.location);
-
-        window.location.assign = function(url) {
-            if (typeof url === 'string') {
-                url = rewrite(url);
-            }
-            return _assign(url);
-        };
-
-        window.location.replace = function(url) {
-            if (typeof url === 'string') {
-                url = rewrite(url);
-            }
-            return _replace(url);
-        };
-    }
-
-    if (window.open) {
-        var _openWindow = window.open.bind(window);
-        window.open = function(url, target, features) {
-            if (typeof url === 'string') {
-                url = rewrite(url);
-            }
-            return _openWindow(url, target, features);
-        };
-    }
-
-    if (window.WebSocket) {
-        var _WebSocket = window.WebSocket;
-        window.WebSocket = function(url, protocols) {
-            if (typeof url === 'string' && url.startsWith('/')) {
-                var scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                url = scheme + window.location.host + rewrite(url);
-            }
-            return new _WebSocket(url, protocols);
-        };
-        window.WebSocket.prototype = _WebSocket.prototype;
-    }
-
-    if (navigator.serviceWorker && navigator.serviceWorker.register) {
-        var _register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
-        navigator.serviceWorker.register = function(scriptURL, options) {
-            // Under HA ingress, disable SW registration to avoid invalid scope
-            // errors and stale caches tied to root-origin paths.
-            if (base !== '/') {
-                return Promise.resolve(null);
-            }
-
-            var fixed = rewrite(scriptURL);
-            var nextOptions = options;
-
-            return _register(fixed, nextOptions);
-        };
-
-        if (base !== '/' && navigator.serviceWorker.getRegistrations) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for (var i = 0; i < registrations.length; i++) {
-                    registrations[i].unregister();
-                }
-            }).catch(function() {});
-        }
-    }
-
-    rewriteDomAssetUrls(document);
-
-    document.addEventListener('submit', function(ev) {
-        var form = ev && ev.target;
-        if (!form || !form.getAttribute || !form.setAttribute) return;
-        var action = form.getAttribute('action');
-        if (action && action.charAt(0) === '/' && !action.startsWith('//')) {
-            form.setAttribute('action', rewrite(action));
-        }
-    }, true);
-
-    if (window.MutationObserver && document && document.documentElement) {
-        var mo = new MutationObserver(function(mutations) {
-            for (var i = 0; i < mutations.length; i++) {
-                var mm = mutations[i];
-                if (mm.type === 'attributes' && mm.target && mm.target.getAttribute) {
-                    rewriteDomAssetUrls(mm.target.parentNode || document);
-                }
-                if (mm.addedNodes && mm.addedNodes.length) {
-                    for (var j = 0; j < mm.addedNodes.length; j++) {
-                        var n = mm.addedNodes[j];
-                        if (n && n.nodeType === 1) rewriteDomAssetUrls(n);
-                    }
-                }
-            }
-        });
-
-        mo.observe(document.documentElement, {
-            subtree: true,
-            childList: true,
-            attributes: true,
-            attributeFilter: ['src', 'href']
-        });
-    }
-})();
+}
 EOF
+}
 
-    if ! grep -q 'ha-ingress-compat.js' "${INDEX_HTML}"; then
-        sed -i 's#</head>#  <script src="./ha-ingress-compat.js"></script>\n</head>#' "${INDEX_HTML}"
+start_backend() {
+    cd /app/server
+    gosu node node --require tsconfig-paths/register dist/index.js &
+    BACKEND_PID=$!
+}
+
+cleanup() {
+    if [ -n "${BACKEND_PID:-}" ]; then
+        kill "${BACKEND_PID}" 2>/dev/null || true
     fi
 }
 
-# ── Persistent storage ────────────────────────────────────────────────────
-# The Home Assistant Supervisor mounts the add-on's persistent storage at /data.
-# TREK expects its data at /app/data and uploads at /app/uploads.
-# We create the required sub-directories under /data on first run, then replace
-# the image-built empty directories with symlinks so TREK writes to persistent
-# storage across restarts and upgrades.
+trap cleanup INT TERM EXIT
 
+# Persistent storage
 mkdir -p \
     /data/trek_data/logs \
     /data/uploads/files \
@@ -241,17 +97,15 @@ mkdir -p \
     /data/uploads/avatars \
     /data/uploads/photos
 
-# rm -rf on a symlink removes the symlink itself (not the target), so this is
-# idempotent whether /app/data is a fresh directory or a leftover symlink.
 rm -rf /app/data /app/uploads
 ln -sf /data/trek_data /app/data
 ln -sf /data/uploads /app/uploads
 
 chown -R node:node /data/trek_data /data/uploads 2>/dev/null || true
 
-# ── Configuration from HA add-on options ─────────────────────────────────
+# Configuration from HA add-on options
 export NODE_ENV=production
-export PORT=3000
+export PORT=${BACKEND_PORT}
 
 ENCRYPTION_KEY=$(jq --raw-output '.encryption_key // ""' "${OPTIONS_FILE}")
 [ -n "${ENCRYPTION_KEY}" ] && export ENCRYPTION_KEY
@@ -280,7 +134,6 @@ TRUST_PROXY=$(jq --raw-output '.trust_proxy // 1' "${OPTIONS_FILE}")
 ALLOWED_ORIGINS=$(jq --raw-output '.allowed_origins // ""' "${OPTIONS_FILE}")
 [ -n "${ALLOWED_ORIGINS}" ] && export ALLOWED_ORIGINS
 
-# Optional OIDC / SSO settings
 OIDC_ISSUER=$(jq --raw-output '.oidc_issuer // ""' "${OPTIONS_FILE}")
 if [ -n "${OIDC_ISSUER}" ]; then
     export OIDC_ISSUER
@@ -295,9 +148,6 @@ if [ -n "${OIDC_ISSUER}" ]; then
     OIDC_DISPLAY_NAME=$(jq --raw-output '.oidc_display_name // "SSO"' "${OPTIONS_FILE}")
 fi
 
-# ── Start TREK ────────────────────────────────────────────────────────────
-# Must cd into /app/server so tsconfig-paths/register can resolve tsconfig.json
-# and ../node_modules. gosu drops privileges from root to the node user.
-apply_ingress_compat_patch
-cd /app/server
-exec gosu node node --require tsconfig-paths/register dist/index.js
+write_nginx_config
+start_backend
+exec nginx -g 'daemon off;'

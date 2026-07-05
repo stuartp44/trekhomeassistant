@@ -74,8 +74,8 @@ in the persistent storage volume.
 - **Via HA sidebar** — click Open Web UI (uses Home Assistant ingress).
 - **Direct URL fallback** — `http://<ha-host>:3000`.
 
-> **Important:** This add-on includes an ingress-compat shim for TREK frontend
-> asset and API paths so it works behind Home Assistant ingress.
+> **Important:** This add-on runs TREK behind an internal nginx reverse proxy
+> to handle Home Assistant ingress path translation and redirects.
 
 > **WebSocket note:** Real-time sync uses WebSockets on `/ws` and works over
 > ingress and direct connection.
