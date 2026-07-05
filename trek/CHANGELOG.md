@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.5...trekhomeassistant-v3.9.0) (2026-07-05)
+
+
+### Features
+
+* add static path patching for Home Assistant ingress compatibility ([f04b0b9](https://github.com/stuartp44/trekhomeassistant/commit/f04b0b99529953e41aa84d94db3c55f70e48a3e8))
+
 ## [3.8.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.3...trekhomeassistant-v3.8.4) (2026-07-05)
 
 ### Bug Fixes
