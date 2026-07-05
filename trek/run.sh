@@ -110,21 +110,25 @@ apply_ingress_compat_patch() {
     if (navigator.serviceWorker && navigator.serviceWorker.register) {
         var _register = navigator.serviceWorker.register.bind(navigator.serviceWorker);
         navigator.serviceWorker.register = function(scriptURL, options) {
+            // Under HA ingress, disable SW registration to avoid invalid scope
+            // errors and stale caches tied to root-origin paths.
+            if (base !== '/') {
+                return Promise.resolve(null);
+            }
+
             var fixed = rewrite(scriptURL);
             var nextOptions = options;
 
-            // Prevent scope errors under HA ingress where '/' is outside allowed scope.
-            if (base !== '/') {
-                nextOptions = options ? Object.assign({}, options) : {};
-                if (!nextOptions.scope || nextOptions.scope === '/') {
-                    nextOptions.scope = base;
-                } else if (nextOptions.scope.charAt(0) === '/' && !nextOptions.scope.startsWith(base)) {
-                    nextOptions.scope = rewrite(nextOptions.scope);
-                }
-            }
-
             return _register(fixed, nextOptions);
         };
+
+        if (base !== '/' && navigator.serviceWorker.getRegistrations) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (var i = 0; i < registrations.length; i++) {
+                    registrations[i].unregister();
+                }
+            }).catch(function() {});
+        }
     }
 
     rewriteDomAssetUrls(document);
