@@ -39,9 +39,35 @@ patch_static_paths() {
 
                 cat > "$ingress_shim" <<'EOF'
 (function () {
-    var p = window.location.pathname || '/';
-    var m = p.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
-    var base = m ? m[1] : '';
+    function extractBase(pathname) {
+        if (!pathname || typeof pathname !== 'string') return '';
+        var m = pathname.match(/^(\/api\/hassio_ingress\/[^/]+\/)/);
+        if (m) return m[1];
+        m = pathname.match(/^(\/hassio_ingress\/[^/]+\/)/);
+        if (m) return m[1];
+        return '';
+    }
+
+    function pathFromUrl(url) {
+        try {
+            return new URL(url, window.location.origin).pathname || '/';
+        } catch (_) {
+            return '';
+        }
+    }
+
+    var base = extractBase(window.location.pathname || '/');
+
+    if (!base && document.currentScript && document.currentScript.src) {
+        base = extractBase(pathFromUrl(document.currentScript.src));
+    }
+
+    if (!base) {
+        var shim = document.querySelector('script[src*="ha-ingress-runtime.js"]');
+        if (shim && shim.src) {
+            base = extractBase(pathFromUrl(shim.src));
+        }
+    }
 
     if (!base) return;
 
@@ -79,6 +105,45 @@ patch_static_paths() {
         return base + url.replace(/^\//, '');
     }
 
+    function patchSetter(proto, prop) {
+        if (!proto) return;
+        var desc = Object.getOwnPropertyDescriptor(proto, prop);
+        if (!desc || !desc.set || !desc.get) return;
+
+        Object.defineProperty(proto, prop, {
+            configurable: true,
+            enumerable: desc.enumerable,
+            get: function () {
+                return desc.get.call(this);
+            },
+            set: function (value) {
+                if (typeof value === 'string') value = rewrite(value);
+                return desc.set.call(this, value);
+            }
+        });
+    }
+
+    function patchDomWriters() {
+        if (window.Element && window.Element.prototype && window.Element.prototype.setAttribute) {
+            var _setAttribute = window.Element.prototype.setAttribute;
+            window.Element.prototype.setAttribute = function (name, value) {
+                if (typeof value === 'string' && (name === 'src' || name === 'href' || name === 'action')) {
+                    value = rewrite(value);
+                }
+                return _setAttribute.call(this, name, value);
+            };
+        }
+
+        patchSetter(window.HTMLImageElement && window.HTMLImageElement.prototype, 'src');
+        patchSetter(window.HTMLScriptElement && window.HTMLScriptElement.prototype, 'src');
+        patchSetter(window.HTMLSourceElement && window.HTMLSourceElement.prototype, 'src');
+        patchSetter(window.HTMLVideoElement && window.HTMLVideoElement.prototype, 'src');
+        patchSetter(window.HTMLAudioElement && window.HTMLAudioElement.prototype, 'src');
+        patchSetter(window.HTMLLinkElement && window.HTMLLinkElement.prototype, 'href');
+        patchSetter(window.HTMLAnchorElement && window.HTMLAnchorElement.prototype, 'href');
+        patchSetter(window.HTMLFormElement && window.HTMLFormElement.prototype, 'action');
+    }
+
     var _fetch = window.fetch;
     if (typeof _fetch === 'function') {
         window.fetch = function (input, init) {
@@ -98,6 +163,99 @@ patch_static_paths() {
             arguments[1] = rewrite(url);
             return _open.apply(this, arguments);
         };
+    }
+
+    if (window.location && window.location.assign && window.location.replace) {
+        var _assign = window.location.assign.bind(window.location);
+        var _replace = window.location.replace.bind(window.location);
+
+        window.location.assign = function (url) {
+            if (typeof url === 'string') url = rewrite(url);
+            return _assign(url);
+        };
+
+        window.location.replace = function (url) {
+            if (typeof url === 'string') url = rewrite(url);
+            return _replace(url);
+        };
+    }
+
+    if (window.history && window.history.pushState && window.history.replaceState) {
+        var _pushState = window.history.pushState.bind(window.history);
+        var _replaceState = window.history.replaceState.bind(window.history);
+
+        window.history.pushState = function (state, title, url) {
+            if (typeof url === 'string') url = rewrite(url);
+            return _pushState(state, title, url);
+        };
+
+        window.history.replaceState = function (state, title, url) {
+            if (typeof url === 'string') url = rewrite(url);
+            return _replaceState(state, title, url);
+        };
+    }
+
+    if (window.open) {
+        var _openWindow = window.open.bind(window);
+        window.open = function (url, target, features) {
+            if (typeof url === 'string') url = rewrite(url);
+            return _openWindow(url, target, features);
+        };
+    }
+
+    patchDomWriters();
+
+    function rewriteDomUrls(root) {
+        if (!root || !root.querySelectorAll) return;
+        var nodes = root.querySelectorAll('img[src],script[src],source[src],video[src],audio[src],link[href],a[href],form[action]');
+
+        for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            var src = el.getAttribute('src');
+            var href = el.getAttribute('href');
+            var action = el.getAttribute('action');
+
+            if (src) {
+                var fixedSrc = rewrite(src);
+                if (fixedSrc !== src) el.setAttribute('src', fixedSrc);
+            }
+
+            if (href) {
+                var fixedHref = rewrite(href);
+                if (fixedHref !== href) el.setAttribute('href', fixedHref);
+            }
+
+            if (action) {
+                var fixedAction = rewrite(action);
+                if (fixedAction !== action) el.setAttribute('action', fixedAction);
+            }
+        }
+    }
+
+    rewriteDomUrls(document);
+
+    if (window.MutationObserver && document && document.documentElement) {
+        var mo = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var mm = mutations[i];
+                if (mm.type === 'attributes' && mm.target && mm.target.parentNode) {
+                    rewriteDomUrls(mm.target.parentNode);
+                }
+                if (mm.addedNodes && mm.addedNodes.length) {
+                    for (var j = 0; j < mm.addedNodes.length; j++) {
+                        var n = mm.addedNodes[j];
+                        if (n && n.nodeType === 1) rewriteDomUrls(n);
+                    }
+                }
+            }
+        });
+
+        mo.observe(document.documentElement, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['src', 'href', 'action']
+        });
     }
 
     if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
