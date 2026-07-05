@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.3...trekhomeassistant-v3.9.4) (2026-07-05)
+
+
+### Bug Fixes
+
+* update NGINX configuration to use effective ingress prefix for path handling ([fb6f897](https://github.com/stuartp44/trekhomeassistant/commit/fb6f8971d164b28a360982cb4cb945cd0c55a6a1))
+
 ## [3.9.3](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.2...trekhomeassistant-v3.9.3) (2026-07-05)
 
 
