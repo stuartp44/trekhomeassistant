@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.11.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.10.0...trekhomeassistant-v3.11.0) (2026-07-05)
+
+
+### Features
+
+* enhance URL rewriting in ingress runtime shim for improved asset handling ([57bc32f](https://github.com/stuartp44/trekhomeassistant/commit/57bc32fb4a81fcab0f4674f6aa986535076f8a31))
+
 ## [3.10.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.5...trekhomeassistant-v3.10.0) (2026-07-05)
 
 
