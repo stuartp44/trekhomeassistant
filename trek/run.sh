@@ -22,10 +22,18 @@ patch_static_paths() {
     if [ -d "${ASSETS_DIR}" ]; then
         # Patch built CSS/JS bundles that still contain root-absolute paths.
         find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./assets/#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/logo-light.svg)#url(./logo-light.svg)#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.css' -exec sed -i 's#url(/logo-dark.svg)#url(./logo-dark.svg)#g' {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/assets/#"./assets/#g' {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/assets/#'./assets/#g" {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/api/#"./api/#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/api/#'./api/#g" {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/ws"#"./ws"#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i "s#'/ws'#'./ws'#g" {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/logo-light.svg"#"./logo-light.svg"#g' {} \;
+        find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/logo-dark.svg"#"./logo-dark.svg"#g' {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/theme-boot.js"#"./theme-boot.js"#g' {} \;
         find "${ASSETS_DIR}" -type f -name '*.js' -exec sed -i 's#"/registerSW.js"#"./registerSW.js"#g' {} \;
     fi
