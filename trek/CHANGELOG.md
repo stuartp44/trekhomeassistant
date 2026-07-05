@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.5](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.4...trekhomeassistant-v3.13.5) (2026-07-05)
+
+
+### Bug Fixes
+
+* expose app-relative pathname to frontend for proper path handling ([0659115](https://github.com/stuartp44/trekhomeassistant/commit/0659115214e1f726a7ec9e1772a3a17c9a5aae5d))
+
 ## [3.13.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.3...trekhomeassistant-v3.13.4) (2026-07-05)
 
 
