@@ -25,7 +25,7 @@ inside your Home Assistant instance, pinned to a specific upstream release.
 2. Install the **TREK** add-on.
 3. Configure the options (see below).
 4. Start the add-on.
-5. Open the TREK web interface via the sidebar or on port `3000`.
+5. Open the TREK web interface on port `3000`.
 
 ## First boot
 
@@ -74,14 +74,13 @@ Release notes are available in [CHANGELOG.md](CHANGELOG.md) and on
 
 ## Accessing TREK
 
-- **Via HA sidebar** — click Open Web UI (uses Home Assistant ingress).
-- **Direct URL fallback** — `http://<ha-host>:3000`.
+- **Direct URL** — `http://<ha-host>:3000`.
 
-> **Important:** This add-on runs TREK behind an internal nginx reverse proxy
-> to handle Home Assistant ingress path translation and redirects.
+> **Important:** This add-on is configured for direct Web UI mode (Home
+> Assistant ingress disabled).
 
 > **WebSocket note:** Real-time sync uses WebSockets on `/ws` and works over
-> ingress and direct connection.
+> direct connection.
 
 ## Reverse proxy (optional)
 

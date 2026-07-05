@@ -19,9 +19,9 @@ ports_description:
   3000/tcp: TREK Web Interface
 map:
   - data
-ingress: true
+ingress: false
 ingress_port: 3000
-ingress_stream: true
+ingress_stream: false
 webui: http://[HOST]:[PORT:3000]
 panel_icon: mdi:map-marker-path
 panel_title: TREK

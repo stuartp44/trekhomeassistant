@@ -1,10 +1,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Install jq to parse Home Assistant add-on options from /data/options.json
-# and nginx to provide ingress-safe reverse proxying in front of TREK.
+# Install jq to parse Home Assistant add-on options from /data/options.json.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends jq nginx \
+    && apt-get install -y --no-install-recommends jq \
     && rm -rf /var/lib/apt/lists/*
 
 COPY run.sh /run.sh
