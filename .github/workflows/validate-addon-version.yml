@@ -21,12 +21,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          config_version=$(grep -E '^version: "[0-9]+\.[0-9]+\.[0-9]+"$' trek/config.yaml | sed -E 's/^version: "([^"]+)"$/\1/')
-          amd64_tag=$(grep -E '^  amd64: "mauriceboe/trek:' trek/build.yaml | sed -E 's#^  amd64: "mauriceboe/trek:([^"]+)"$#\1#')
-          aarch64_tag=$(grep -E '^  aarch64: "mauriceboe/trek:' trek/build.yaml | sed -E 's#^  aarch64: "mauriceboe/trek:([^"]+)"$#\1#')
+          config_version=$(sed -nE 's/^version:[[:space:]]*"?([^"[:space:]]+)"?[[:space:]]*$/\1/p' trek/config.yaml | head -n1 || true)
+          amd64_tag=$(sed -nE 's#^[[:space:]]*amd64:[[:space:]]*"?mauriceboe/trek:([^"[:space:]]+)"?[[:space:]]*$#\1#p' trek/build.yaml | head -n1 || true)
+          aarch64_tag=$(sed -nE 's#^[[:space:]]*aarch64:[[:space:]]*"?mauriceboe/trek:([^"[:space:]]+)"?[[:space:]]*$#\1#p' trek/build.yaml | head -n1 || true)
 
           if [ -z "$config_version" ] || [ -z "$amd64_tag" ] || [ -z "$aarch64_tag" ]; then
             echo "Version parsing failed. Check trek/config.yaml and trek/build.yaml formats."
+            echo "config_version='${config_version:-}'"
+            echo "amd64_tag='${amd64_tag:-}'"
+            echo "aarch64_tag='${aarch64_tag:-}'"
             exit 1
           fi
 
