@@ -4,6 +4,12 @@ TREK is a self-hosted, real-time collaborative travel planner. This add-on runs
 the official [mauriceboe/trek](https://github.com/mauriceboe/TREK) Docker image
 inside your Home Assistant instance, pinned to a specific upstream release.
 
+## Upstream Credit
+
+- Upstream project: [mauriceboe/TREK](https://github.com/mauriceboe/TREK)
+- Creator and maintainer: [Maurice Boehm (@mauriceboe)](https://github.com/mauriceboe)
+- This add-on is an unofficial packaging wrapper and is not affiliated with the upstream TREK maintainers.
+
 ## Features
 
 - **Trip planning** — drag-and-drop planner, interactive map, place search
@@ -80,5 +86,7 @@ Caddy examples.
 
 ## License
 
-TREK is licensed under [AGPL-3.0](https://github.com/mauriceboe/TREK/blob/main/LICENSE).
+- Add-on wrapper repository license: MIT
+- Upstream TREK license: [AGPL-3.0](https://github.com/mauriceboe/TREK/blob/main/LICENSE)
+
 This add-on wrapper is maintained separately and is not affiliated with the TREK project.

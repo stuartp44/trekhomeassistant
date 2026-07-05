@@ -1,8 +1,15 @@
 # TREK Home Assistant Add-ons
 
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-6B7280?style=flat-square)](https://github.com/mauriceboe/TREK/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-6B7280?style=flat-square)](LICENSE)
 
 A Home Assistant add-on repository that packages [TREK](https://github.com/mauriceboe/TREK), a self-hosted real-time collaborative travel planner, so it runs natively inside your Home Assistant instance.
+
+## Upstream Credit
+
+- Upstream project: [mauriceboe/TREK](https://github.com/mauriceboe/TREK)
+- Creator and maintainer: [Maurice Boehm (@mauriceboe)](https://github.com/mauriceboe)
+- This repository provides Home Assistant add-on packaging for the upstream TREK Docker image.
+- This repository is unofficial and is not affiliated with the upstream TREK maintainers.
 
 ## Add-ons
 
@@ -50,9 +57,11 @@ The TREK add-on version is pinned to an explicit upstream TREK release (never
 - `trek/config.yaml` uses the same pinned version.
 - `test-addon-version` workflow tests that pinned versions are consistent.
 - Renovate watches upstream `mauriceboe/trek` tags and opens PRs when updates
-   are available.
+  are available.
 
 ## License
 
-This add-on wrapper is provided under the same [AGPL-3.0](https://github.com/mauriceboe/TREK/blob/main/LICENSE)
-license as the upstream TREK project.
+- Add-on wrapper repository license: [MIT](LICENSE)
+- Upstream TREK license: [AGPL-3.0](https://github.com/mauriceboe/TREK/blob/main/LICENSE)
+
+Use of the upstream TREK image and software remains subject to upstream license terms.
