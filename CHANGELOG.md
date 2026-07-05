@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.5](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.4...trekhomeassistant-v3.8.5) (2026-07-05)
+
+
+### Bug Fixes
+
+* improve ingress handling with nginx reverse proxy and update run script ([a9d9acf](https://github.com/stuartp44/trekhomeassistant/commit/a9d9acf793426a5d3197674d7a4cfa4d2882b741))
+
 ## [3.8.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.3...trekhomeassistant-v3.8.4) (2026-07-05)
 
 
