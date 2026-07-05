@@ -321,7 +321,16 @@ EOF
         fi
 
         if [ -d "$assets_dir" ]; then
-            echo "[run.sh] Leaving bundled assets unchanged in $assets_dir (runtime/nginx rewrites active)"
+            echo "[run.sh] Applying targeted bundled-asset rewrites in $assets_dir"
+            # Keep this narrowly scoped to avoid path corruption.
+            # Fonts in CSS commonly use url(/assets/<file>), which escapes ingress.
+            find "$assets_dir" -type f -name '*.css' -exec sed -i 's#url(/assets/#url(./#g' {} \;
+
+            # Login and logo literals appear in bundled JS as root-absolute paths.
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/login#"./login#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i "s#'/login#'./login#g" {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-light.svg"#"./logo-light.svg"#g' {} \;
+            find "$assets_dir" -type f -name '*.js' -exec sed -i 's#"/logo-dark.svg"#"./logo-dark.svg"#g' {} \;
         fi
     done
 }
