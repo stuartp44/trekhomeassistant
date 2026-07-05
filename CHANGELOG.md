@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.4](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.3...trekhomeassistant-v3.8.4) (2026-07-05)
+
+
+### Bug Fixes
+
+* enhance ingress compatibility by updating form action handling and history methods ([798bc48](https://github.com/stuartp44/trekhomeassistant/commit/798bc48073fe5f3d3933da7aac13007de651364a))
+
 ## [3.8.3](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.2...trekhomeassistant-v3.8.3) (2026-07-05)
 
 
