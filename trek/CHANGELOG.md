@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.6](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.5...trekhomeassistant-v3.13.6) (2026-07-05)
+
+
+### Bug Fixes
+
+* improve login path handling in patch_static_paths function ([59f6d0d](https://github.com/stuartp44/trekhomeassistant/commit/59f6d0dad5456f297c818e1fea6f62aca978611a))
+
 ## [3.13.5](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.4...trekhomeassistant-v3.13.5) (2026-07-05)
 
 
