@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.9.0...trekhomeassistant-v3.9.1) (2026-07-05)
+
+
+### Bug Fixes
+
+* update write_nginx_config to improve ingress mapping ([6362dfc](https://github.com/stuartp44/trekhomeassistant/commit/6362dfcc0c04aa3c605da363ed03f4afc7873672))
+
 ## [3.9.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.5...trekhomeassistant-v3.9.0) (2026-07-05)
 
 
