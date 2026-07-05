@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.8.2](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.1...trekhomeassistant-v3.8.2) (2026-07-05)
+
+
+### Bug Fixes
+
+* update asset URL handling in apply_ingress_compat_patch for Home Assistant compatibility ([7c6eda4](https://github.com/stuartp44/trekhomeassistant/commit/7c6eda4b05696686aa6954b635f575d5dbc73622))
+
 ## [3.8.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.8.0...trekhomeassistant-v3.8.1) (2026-07-05)
 
 
