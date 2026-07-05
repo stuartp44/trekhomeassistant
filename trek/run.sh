@@ -43,6 +43,23 @@ APP_URL=$(jq --raw-output '.app_url // ""' "${OPTIONS_FILE}")
 FORCE_HTTPS=$(jq --raw-output '.force_https // false' "${OPTIONS_FILE}")
 [ "${FORCE_HTTPS}" = "true" ] && export FORCE_HTTPS=true
 
+COOKIE_SECURE=$(jq --raw-output '.cookie_secure // "auto"' "${OPTIONS_FILE}")
+case "${COOKIE_SECURE}" in
+    true)
+        export COOKIE_SECURE=true
+        ;;
+    false)
+        export COOKIE_SECURE=false
+        ;;
+    *)
+        if [ "${FORCE_HTTPS}" = "true" ]; then
+            export COOKIE_SECURE=true
+        else
+            export COOKIE_SECURE=false
+        fi
+        ;;
+esac
+
 TRUST_PROXY=$(jq --raw-output '.trust_proxy // 1' "${OPTIONS_FILE}")
 [ -n "${TRUST_PROXY}" ] && export TRUST_PROXY
 

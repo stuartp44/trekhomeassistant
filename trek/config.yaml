@@ -34,6 +34,7 @@ options:
   tz: UTC
   app_url: ''
   force_https: false
+  cookie_secure: auto
   trust_proxy: 1
   allowed_origins: ''
   oidc_issuer: ''
@@ -48,6 +49,7 @@ schema:
   tz: str
   app_url: str?
   force_https: bool?
+  cookie_secure: list(auto|true|false)?
   trust_proxy: int?
   allowed_origins: str?
   oidc_issuer: str?

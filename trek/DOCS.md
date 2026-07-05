@@ -45,6 +45,7 @@ random password is printed to the add-on log — check it with
 | `tz` | Timezone for logs and cron jobs, e.g. `Europe/Berlin`. | `UTC` |
 | `app_url` | Public base URL of this instance, e.g. `https://trek.example.com`. Required when OIDC is enabled and for email notification links. | — |
 | `force_https` | Enable only behind a TLS-terminating reverse proxy. Enforces secure cookies and HTTPS redirects. | `false` |
+| `cookie_secure` | Session cookie security mode: `auto`, `true`, or `false`. Use `false` for plain HTTP home-lab access; use `true` behind HTTPS. `auto` follows `force_https`. | `auto` |
 | `trust_proxy` | Number of trusted proxy hops in front of TREK (usually `1`). | `1` |
 | `allowed_origins` | Comma-separated CORS origins. Leave empty for same-origin. | — |
 | `oidc_issuer` | OpenID Connect provider URL (leave empty to disable SSO). | — |
