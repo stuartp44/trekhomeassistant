@@ -37,6 +37,8 @@
         "mauriceboe/trek"
       ],
       "groupName": "TREK upstream version",
+      "semanticCommitType": "fix",
+      "semanticCommitScope": "deps",
       "commitMessageTopic": "TREK",
       "automerge": false,
       "labels": [
