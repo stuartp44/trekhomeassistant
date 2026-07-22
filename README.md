@@ -65,6 +65,8 @@ The TREK add-on version is pinned to an explicit upstream TREK release (never
 - `test-addon-version` workflow tests that pinned versions are consistent.
 - Renovate watches upstream `mauriceboe/trek` tags and opens PRs when updates
   are available.
+- Dependabot watches GitHub Actions workflow dependencies (including the
+  Renovate action) and opens PRs for workflow action updates.
 
 ## License
 
