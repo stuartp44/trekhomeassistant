@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.15.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.14.0...trekhomeassistant-v3.15.0) (2026-07-22)
+
+
+### Features
+
+* add .DS_Store to .gitignore and update regex for version matching in renovate.json ([9adf0a6](https://github.com/stuartp44/trekhomeassistant/commit/9adf0a6eabb9e623034b1189631a1253e081274c))
+* add dependabot configuration for GitHub Actions workflow updates ([42054f3](https://github.com/stuartp44/trekhomeassistant/commit/42054f322989ae6629e3dc63a0014a3049488305))
+* add environment variable for RENOVATE_REPOSITORIES in renovate workflow ([65a51c7](https://github.com/stuartp44/trekhomeassistant/commit/65a51c786bfa4155e6ea6a090844296f74ee7e51))
+
+
+### Bug Fixes
+
+* **deps:** add semantic commit type and scope for TREK upstream version ([1ee485c](https://github.com/stuartp44/trekhomeassistant/commit/1ee485c97a84ed3749e44364461cf71f7fd01c73))
+* disable commitlint body line length rule ([4492434](https://github.com/stuartp44/trekhomeassistant/commit/449243478b9a5f0b6c2e4678f3765c14f743dcab))
+* use explicit tuple for disabled commitlint rule ([77cc35a](https://github.com/stuartp44/trekhomeassistant/commit/77cc35a58916c39bda843226845fef500c7177c3))
+
 ## [3.14.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.13.7...trekhomeassistant-v3.14.0) (2026-07-05)
 
 
