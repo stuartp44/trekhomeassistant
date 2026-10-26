@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.15.1](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.15.0...trekhomeassistant-v3.15.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **deps:** update trek to v5 ([76dce1f](https://github.com/stuartp44/trekhomeassistant/commit/76dce1f9d985e5402780c6cd00022166a11fd162))
+* **deps:** update trek to v5 ([f3de95d](https://github.com/stuartp44/trekhomeassistant/commit/f3de95d88343fbb726f7448bf7ca6de816dbc999))
+
 ## [3.15.0](https://github.com/stuartp44/trekhomeassistant/compare/trekhomeassistant-v3.14.0...trekhomeassistant-v3.15.0) (2026-07-22)
 
 
